@@ -17,7 +17,7 @@ var _                       = require('underscore');
 function uncert(req, res) {
     var argument, collection, coords, idx, start, end, source, target;
 
-    collection = core.collections[req.params.scenario];
+    collection = core.DATA[req.params.scenario];
 
     if (collection === undefined) {
         return res.send(404, 'Not Found');

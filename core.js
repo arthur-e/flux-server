@@ -22,7 +22,9 @@ var INTERVALS               = {
                                 'annual': '$year'
                             };
 var db = null;
-var collections = {};
+var scenarios   = [];
+var metadata    = {};
+var data        = {};
 
 var core = 
 {
@@ -33,19 +35,32 @@ var core =
         mongo.connect('mongodb://localhost:27017/fluxvis', function (err, db) {
             var body = null;
             if (err) {return console.dir(err);}
+            
+            //Grab the list of scenarios stored in mongo
+            db.collection('scenarios').find({},{'_id':1}).toArray(function(err,results){
 
-            // Grab the collections. this isn't really necessary if we're fine using db.collection,
-            // but it's handy if we want to iterate through the collections.
-            // TODO: Rework this to grab collections based on scenarios present in the database.
-            //       This will happen once mongo has been reconfigured and the Python Data API has
-            //       been completed.
-            collections['casa_gfed_3hrly'] = db.collection('casa_gfed_3hrly');
-            collections['zerofull_casa_1pm_10twr'] = db.collection('zerofull_casa_1pm_10twr');
-            collections['zerozero_casa_1pm_10twr'] = db.collection('zerozero_casa_1pm_10twr');
-            collections['summary_stats'] = db.collection('summary_stats');
-            collections['daily_stats'] = db.collection('daily_stats');
-            collections['daily_stats'] = db.collection('daily_stats');
-            collections['daily_stats'] = db.collection('daily_stats');
+                for (var i = 0; i < results.length; i++) 
+                {
+                    //Array containing the scenario strings. This is returned by the
+                    //scenarios endpoint
+                    scenarios.push(results[i]._id);
+
+                    data[results[i]._id] = db.collection(results[i]._id);
+
+
+                };                
+
+
+            });
+
+            //Grab the metadata
+            db.collection('scenarios').find().toArray(function(err, docs) {
+                for (var i = 0; i < docs.length; i++) {
+                    metadata[docs[i]._id] = docs[i];                    
+                };
+            });
+            
+            //Grab the indices
             db.collection('coord_index').find().toArray(function (err, idx) {
                 
                 for (var i = 0; i < idx.length; i++) {
@@ -64,9 +79,10 @@ var core =
         self.REGEX                   = REGEX;
         self.AGGREGATES              = AGGREGATES;
         self.INTERVALS               = INTERVALS;
-
-        self.collections = collections;
-        self.db = db;
+        self.SCENARIOS               = scenarios;
+        self.METADATA                = metadata;
+        self.DATA                    = data;
+        self.DB                      = db;
 
         self.app = (app) ? app : null;
 

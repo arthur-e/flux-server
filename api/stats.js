@@ -5,7 +5,7 @@ var numeric                 = require('numeric');
  */
 
 function stats(req, res) {
-  var collection = core.collections['summary_stats'];
+  var collection = core.DATA['summary_stats'];
 
   // Fetch the data from mongo and send the JSON response
   collection.find({

@@ -12,6 +12,9 @@ var uncert  = require('./api/uncertainty.js').uncert;
 var xy      = require('./api/xy.js').xy;
 var t       = require('./api/t.js').t;
 var stats   = require('./api/stats.js').stats;
+var scenario = require('./api/scenario.js').scenario;
+var s_list  = require('./api/scenario.js').scenario_list;
+var geom    = require('./api/geometry.js').geometry;
 
 
 // Express /////////////////////////////////////////////////////////////////////
@@ -55,12 +58,13 @@ app.get('/flux/api/grid.json', function (req, res) {
 
 
 //Bring in all the routes here
-app.get('/flux/api/scenarios/',scenario_bulk); //TODO: Implement this
+app.get('/flux/api/scenarios/:scenario/geometry.json',geom);
+app.get('/flux/api/scenarios.json',s_list);
 app.get('/flux/api/scenarios/:scenario.json',scenario);
 app.get('/flux/api/scenarios/:scenario/uncertainty.json', uncert);
 app.get('/flux/api/scenarios/:scenario/xy.json', xy);
 app.get('/flux/api/scenarios/:scenario/t.json', t);
-app.get('/flux/api/scenarios/:scenario/stats.json', stats);
+
 
 
 

@@ -18,7 +18,7 @@ var _                       = require('underscore');
 function t(req, res) {
     var body, coords, argument, i, idx;
 
-    var collection = core.collections[req.params.scenario];
+    var collection = core.DATA[req.params.scenario];
 
     if (collection === undefined) {
         return res.send(404, 'Not Found');

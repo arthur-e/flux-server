@@ -12,7 +12,7 @@ var _                       = require('underscore');
         Valid combinations: (time), (start, end, aggregate)
  */
 function xy(req, res) {
-    var collection = core.collections[req.params.scenario];
+    var collection = core.DATA[req.params.scenario];
 
     if (collection === undefined) {
         return res.send(404, 'Not Found');
