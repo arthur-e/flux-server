@@ -37,7 +37,7 @@ var core =
             if (err) {return console.dir(err);}
             
             //Grab the list of scenarios stored in mongo
-            db.collection('scenarios').find({},{'_id':1}).toArray(function(err,results){
+            db.collection('metadata').find({},{'_id':1}).toArray(function(err,results){
 
                 for (var i = 0; i < results.length; i++) 
                 {
@@ -46,7 +46,6 @@ var core =
                     scenarios.push(results[i]._id);
 
                     data[results[i]._id] = db.collection(results[i]._id);
-
 
                 };                
 
