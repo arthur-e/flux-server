@@ -12,10 +12,8 @@ var uncert  = require('./api/uncertainty.js').uncert;
 var xy      = require('./api/xy.js').xy;
 var t       = require('./api/t.js').t;
 var stats   = require('./api/stats.js').stats;
-var scenario = require('./api/scenario.js').scenario;
-var s_list  = require('./api/scenario.js').scenario_list;
+var scenarios = require('./api/scenario.js').scenario;
 var geom    = require('./api/geometry.js').geometry;
-
 
 // Express /////////////////////////////////////////////////////////////////////
 
@@ -41,32 +39,13 @@ app.use('/flux/shared', express.static(core.PROJ_DIR + '/node_modules'));
 
 app.use('/flux/api', express.static(core.PROJ_DIR + '/api'));
 
-/**
-    Returns a GeoJSON MultiPoint representation of the underlying model
-    grid cells.
-
-    TODO:   This should probably have something in the request specifying the 
-            scenario
- */
-app.get('/flux/api/grid.json', function (req, res) {
-    return res.send({
-        type: 'MultiPoint',
-        coordinates: INDEX
-    });
-});
-
-
-
 //Bring in all the routes here
-app.get('/flux/api/scenarios/:scenario/geometry.json',geom);
-app.get('/flux/api/scenarios.json',s_list);
-app.get('/flux/api/scenarios/:scenario.json',scenario);
+app.get('/flux/api/scenarios.json', scenarios);
+app.get('/flux/api/scenarios/:scenario.json', scenarios);
+app.get('/flux/api/scenarios/:scenario/geometry.json', geom);
 app.get('/flux/api/scenarios/:scenario/uncertainty.json', uncert);
 app.get('/flux/api/scenarios/:scenario/xy.json', xy);
 app.get('/flux/api/scenarios/:scenario/t.json', t);
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Error Handling //////////////////////////////////////////////////////////////
@@ -75,9 +54,6 @@ app.use(function (err, req, res, next) {
     console.error(err.stack);
     res.send(500, 'Internal Server Error');
 });
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Launch //////////////////////////////////////////////////////////////////////

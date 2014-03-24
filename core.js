@@ -53,7 +53,7 @@ var core =
             });
 
             //Grab the metadata
-            db.collection('scenarios').find().toArray(function(err, docs) {
+            db.collection('metadata').find().toArray(function(err, docs) {
                 for (var i = 0; i < docs.length; i++) {
                     metadata[docs[i]._id] = docs[i];                    
                 };
