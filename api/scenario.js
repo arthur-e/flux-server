@@ -8,9 +8,11 @@ function scenario (req, res) {
         if (!core.SCENARIOS) {
             return res.send(404, "Not Found");
         } else {
-            return res.send({
-                scenarios: core.SCENARIOS
-            });
+            return res.send(_.map(core.SCENARIOS, function (name) {
+                return {
+                    _id: name
+                }
+            }));
         }
     }
 
