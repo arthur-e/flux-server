@@ -2,28 +2,27 @@ var core                    = require('../core').core;
 var numeric                 = require('numeric');
 var _                       = require('underscore');
 
+function scenario (req, res) {
+    if (!(req.params.scenario || req.query.scenario)) {
+        // Only return the list of scenario names
+        if (!core.SCENARIOS) {
+            return res.send(404, "Not Found");
+        } else {
+            return res.send(_.map(core.SCENARIOS, function (name) {
+                return {
+                    _id: name
+                }
+            }));
+        }
+    }
 
-function scenario(req, res) {
+    var scn = req.params.scenario || req.query.scenario;
 
-    if(!req.params.scenario) return res.send(400, 'Bad Request');
-    
-
-    if (!(req.params.scenario in core.METADATA) || core.METADATA[req.params.scenario] === undefined) {
+    if (!(scn in core.METADATA) || core.METADATA[scn] === undefined) {
         return res.send(404, 'Not Found');
     }
 
-    else return res.send(core.METADATA[req.params.scenario]);
-}
-
-
-function scenario_list(req, res) {
-
-    //Only return the list of scenario names
-    if (!core.SCENARIOS) res.send(404, "Not Found");
-    else res.send({scenarios:core.SCENARIOS});
-
-
+    return res.send(core.METADATA[scn]);
 }
 
 exports.scenario = scenario;
-exports.scenario_list = scenario_list;
