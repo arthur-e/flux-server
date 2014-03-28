@@ -18,42 +18,55 @@ function xy(req, res) {
         return res.send(404, 'Not Found');
     }
     
-
     numeric.precision = core.FLUX_PRECISION;
 
     ////////////////////////////////////////////////////////////////////////////
     // XY Data (Maps) //////////////////////////////////////////////////////////
 
     if (_.has(req.query, 'time')) {
-      var argument = new Date(req.query.time); // Grab the date string from the query
+        var body, i;
+        var argument = new Date(req.query.time); // Grab the date string from the query
 
-      // Fetch the data from mongo and construct the GeoJSON response
-      // Note that the mongo find query can use the date object instead
-      // of a constructed date string
-      collection.find({'_id': argument}).toArray(function (err, map) {
-            var body, i;
-
+        // Fetch the data from mongo and construct the GeoJSON response
+        // Note that the mongo find query can use the date object instead
+        // of a constructed date string
+        collection.find({'_id': argument}).toArray(function (err, map) {
             if (err) return console.log(err);
 
             if (map.length === 0) {
                 return res.send(404, 'Not Found');
             }
 
-            body = {
-              'timestamp': argument.toISOString(),
-                //'type': 'FeatureCollection', // Required for compliant GeoJSON
-              'features': []
+            if (_.has(req.query, 'verbose')) {
+                // Emit a GeoJSON-compliant FeatureCollection instead
+
+                body = {
+                    'timestamp': argument.toISOString(),
+                    'type': 'FeatureCollection',
+                    'features': []
+                };
+
+                map[0].values.forEach(function (v, i) {
+                    body.features.push({
+                        'type': 'Point',
+                        'coordinates': core.INDEX[req.params.scenario][i],
+                        'properties': {
+                            'v': Number(v.toFixed(core.FLUX_PRECISION)),
+                        }
+                    });
+                });
+
+             } else {
+                body = {
+                    'timestamp': argument.toISOString(),
+                    'features': []
+                };
+
+                map[0].values.forEach(function (v, i) {
+                    body.features.push(Number(v.toFixed(core.FLUX_PRECISION)));
+                });
+
             }
-            
-            map[0].values.forEach(function (v, i) {
-
-
-              body.features.push({
-                'flux': v.toFixed(core.FLUX_PRECISION),
-                    //'type': 'Point', // Required for compliant GeoJSON
-                'coordinates': core.INDEX[req.params.scenario][i]
-              });
-            })
 
             // Send the response as a JSON object
             res.send(body);
@@ -140,7 +153,7 @@ function xy(req, res) {
                     return Number(v.toFixed(core.FLUX_PRECISION));
                 }).map(function (value, i) { // Format response body
                     return {
-                        'flux': value,
+                        'v': value,
                         //'type': 'Point', // Required for compliant GeoJSON
                         'coordinates': core.INDEX[req.params.scenario][i]
                     };
@@ -198,7 +211,7 @@ function xy(req, res) {
                     return Number(v.toFixed(core.FLUX_PRECISION));
                 }).map(function (value, i) { // Format response body
                     return {
-                        'flux': value,
+                        'v': value,
                         //'type': 'Point', // Required for compliant GeoJSON
                         'coordinates': core.INDEX[req.params.scenario][i]
                     };

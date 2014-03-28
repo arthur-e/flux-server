@@ -7,7 +7,8 @@ var numeric = require('numeric');
 var mongo   = require('mongodb').MongoClient;
 var express = require('express');
 var core    = require('./core').core;
-// Route requires /////////////////////
+
+// Route requires //////////////////////////////////////////////////////////////
 var uncert  = require('./api/uncertainty.js').uncert;
 var xy      = require('./api/xy.js').xy;
 var t       = require('./api/t.js').t;
