@@ -1,5 +1,5 @@
 {
-  "name": "fluxwebmap",
+  "name": "flux-server",
   "version": "0.0.1",
   "private": true,
   "preferGlobal": false,
@@ -9,13 +9,10 @@
     "backbone": "1.0.0",
     "moment": "latest",
     "numeric": "1.2.6",
-    "d3": "latest",
-    "topojson": "1.1.3",
     "express": "3.x",
     "mongodb": "latest",
     "ejs": "~0.8.4",
-    "ejs-locals": "~1.0.2",
-    "queue": "git://github.com/mbostock/queue"
+    "ejs-locals": "~1.0.2"
   },
   "devDependencies": {
     "jasmine-node": "latest"
@@ -25,6 +22,6 @@
     "url": "/net/nas3/data/gis_lab/project/NASA_ACOS_Visualization/git/flux-d3/"
   },
   "scripts": {
-    "preinstall": "sudo npm install forever -g;wget http://spatial.mtri.org/flux/shared/moment/moment.min.js -O /usr/local/project/flux-d3/node_modules/moment/moment.min.js;wget http://spatial.mtri.org/flux/shared/topojson/topojson.min.js -O /usr/local/project/flux-d3/node_modules/topojson/topojson.min.js;wget http://spatial.mtri.org/flux/shared/requirejs/r.js -O /usr/local/project/flux-d3/node_modules/requirejs/r.js"
+    "preinstall": "sudo npm install forever -g;"
   }
 }
