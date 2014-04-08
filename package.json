@@ -5,14 +5,13 @@
   "preferGlobal": false,
   "dependencies": {
     "requirejs": "latest",
+    "d3": "latest",
     "underscore": "1.4.4",
     "backbone": "1.0.0",
     "moment": "latest",
     "numeric": "1.2.6",
     "express": "3.x",
-    "mongodb": "latest",
-    "ejs": "~0.8.4",
-    "ejs-locals": "~1.0.2"
+    "mongodb": "latest"
   },
   "devDependencies": {
     "jasmine-node": "latest"

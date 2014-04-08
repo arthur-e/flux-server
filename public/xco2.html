@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/flux/media/css/controls.css" />
+    <link rel="stylesheet" href="/flux/media/css/xco2.css" />
+    <title>Map of North American Carbon Fluxes | spatial.mtri.org/flux</title>
+</head>
+<script>
+window.DEBUG = (window.location.host === 'localhost' || window.location.href.indexOf('localhost') > 0);
+
+if (DEBUG) {
+    var require = {
+        urlArgs: "bust=" +  (new Date()).getTime() //FIXME Remove to enable caching
+    }
+}
+</script>
+
+<body>
+  <div id='controls'>
+  </div>
+
+  <section id="context">
+        <header>
+          <div class="tipheader">XCO2 Concentration (ppm)</div>
+          <div class="tooltip">
+            <div class="coords"></div>
+            <div class="tipdata"></div>
+          </div>
+        </header>
+        <div id='planet'></div>
+    </section>
+
+    <section id="controls">
+    </section>
+
+  <script data-main="/flux/app/planet/xco2" src="/flux/app/require.js"></script>
+</body>

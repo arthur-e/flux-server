@@ -1,0 +1,330 @@
+//TODO Assign color or scale to forest area
+//TODO High response in northeast may be due to higher variability in data--fewer data points for smaller states
+requirejs.config({
+    appDir: '.',
+    baseUrl: '/flux/app/js/',
+    paths: {
+        d3: '/flux/shared/d3/d3.min',
+        moment: '/flux/shared/moment/moment.min',
+        queue: '/flux/shared/queue-async/queue.min',
+        topojson: '/flux/shared/topojson/topojson.min',
+        underscore: '/flux/shared/underscore/underscore-min',
+        backbone: '/flux/shared/backbone/backbone-min',
+        planetary: '/flux/app/js/planet/planetary'
+    },
+    shim: {
+        backbone: {
+            deps: ['underscore'],
+            exports: 'Backbone'
+        },
+        d3: { exports: 'd3' },
+        queue: { exports: 'queue' },
+        topojson: { exports: 'topojson' },
+        underscore: { exports: '_' }
+    },
+    dir: 'build/',
+    modules: [
+        {name: 'statesBreathing'}
+    ]
+});
+
+require([
+    'underscore',
+    'd3',
+    'topojson',
+    'moment',
+    'planetary',
+    'utils',
+    'colorRamp'
+], function (_, d3, topojson, moment, planetary, utils, colorRamp) {
+    var controller, csvFile, formatString, panes, projection, svg, timing, easing;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Controller //////////////////////////////////////////////////////////////
+
+    controller = {
+
+        /**
+            The first time slice that should be rendered.
+            @constant
+         */
+        initialTime: '2004-01-01T03:00:00', //'2003-12-22T03:00:00',
+
+        /**
+            Time series information; "the big picture."
+         */
+        series: {
+            startTime: undefined,
+            endTime: undefined,
+            interval: 1000,
+            timeDelta: 1, // Temporal resolution is daily (24 hours)
+            timeDeltaUnit: 'month',
+            timeDeltaUnits: 'months',
+            offset: 1 // Viewing 24-hour steps in time by default
+        },
+
+        /**
+            The base URL for the flux API.
+            @constant
+         */
+        baseUrl: '/flux/api/casa_gfed_3hrly/xy', //FIXME
+
+        /**
+            Property name that identifies the flux measurement in the JSON
+            document.
+            @constant
+         */
+        fluxField: 'flux',
+
+        /**
+            Describes the floating-point precision of the flux measurements.
+            @constant
+         */
+        fluxPrecision: 2,
+
+        /**
+            SVG element margins.
+            @constant
+         */
+        margin: {
+            top: 0,
+            right: 0,
+            bottom: 50, // To conserve space at top of map (pushes map up)
+            left: 0
+        }
+
+    };
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // Extensions //////////////////////////////////////////////////////////////
+    
+    _.extend(colorRamp, {
+        controller: controller
+    });
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Plugins for Planetary.js  ///////////////////////////////////////////////
+
+     // Plugin to resize the canvas to fill the window and to
+    // automatically center the planet when the window size changes
+    
+    function autocenter(options) {
+      options = options || {};
+      var needsCentering = false;
+      var globe = null;
+
+      var resize = function() {
+        var width  = window.innerWidth + (options.extraWidth || 0);
+        var height = window.innerHeight + (options.extraHeight || 0);
+        globe.canvas.width = width;
+        globe.canvas.height = height;
+        globe.projection.translate([width / 2, height / 2]);
+      };
+
+      return function(planet) {
+        globe = planet;
+        planet.onInit(function() {
+          needsCentering = true;
+          d3.select(window).on('resize', function() {
+            needsCentering = true;
+          });
+        });
+
+        planet.onDraw(function() {
+        if (needsCentering) { resize(); needsCentering = false; }
+        });
+      };
+    };
+
+    // Plugin to automatically scale the planet's projection based
+    // on the window size when the planet is initialized
+    function autoscale(options) {
+      options = options || {};
+      return function(planet) {
+        planet.onInit(function() {
+          var width  = window.innerWidth + (options.extraWidth || 0);
+          var height = window.innerHeight + (options.extraHeight || 0);
+          planet.projection.scale(Math.min(width, height) / 2);
+        });
+      };
+    };
+
+    // Plugin to automatically rotate the globe around its vertical
+    // axis a configured number of degrees every second.
+    function autorotate(degPerSec) {
+      return function(planet) {
+        var lastTick = null;
+        var paused = false;
+        planet.plugins.autorotate = {
+          pause:  function() { paused = true;  },
+          resume: function() { paused = false; }
+        };
+        planet.onDraw(function() {
+          if (paused || !lastTick) {
+            lastTick = new Date();
+          } else {
+            var now = new Date();
+            var delta = now - lastTick;
+            var rotation = planet.projection.rotate();
+            rotation[0] += degPerSec * delta / 1000;
+            if (rotation[0] >= 180) rotation[0] -= 360;
+            planet.projection.rotate(rotation);
+            lastTick = now;
+          }
+        });
+      };
+    };
+
+    grid = function(config) {
+        var cells = [];
+        config = config || {};
+
+        var addCell = function(data, options) {
+          options = options || {};
+          options.color = options.color || config.color || 'white';
+          options.angle = options.angle || config.angle || 5;
+          options.ttl   = options.ttl   || config.ttl   || 2000;
+          var cell = { data: data, options: options };
+
+          cells.push(cell);
+        };
+
+        var drawCells = function(planet, context) {
+          var newCells = [];
+          for (var i = 0; i < cells.length; i++) {
+            var cell = cells[i];
+            
+              newCells.push(cell);
+              drawCell(planet, context, cell);
+            
+          }
+          cells = newCells;
+        };
+
+        var drawCell = function(planet, context, cell) {
+          var alpha = 1;
+          var color = d3.rgb(cell.options.color);
+          color = "rgba(" + color.r + "," + color.g + "," + color.b + "," + alpha + ")";
+          context.strokeStyle = color;
+
+          var mapCell = d3.geo.path(cell.data);
+        
+          context.beginPath();
+          planet.path.context(context)(mapCell);
+          context.stroke();
+        };
+
+        var drawGrid = function(planet)
+        {
+            planet.withSavedContext(function(context) {
+              drawCells(planet, context);
+            });
+        }
+
+        return function (planet) {
+          planet.plugins.grid = {
+            add: addCell, draw: drawGrid
+          };
+
+        
+        };
+    };
+  
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Drawing /////////////////////////////////////////////////////////////////
+    
+
+    var canvas = document.getElementById('planetCanvas');
+    var context = canvas.getContext('2d');
+    
+    console.dir(canvas)
+    /*canvas = d3.select('#planetCanvas')
+        .append('svg')    
+        .attr({
+            title: 'Carbon Flux Visualization',
+            version: 1.1,
+            xmlns: 'http://www.w3.org/2000/svg'
+        })
+        .append('g')
+        .attr('transform', 'translate(' + controller.margin.left + ',' + controller.margin.top + ')');
+    */
+
+    // Create our Planetary.js planet and set some initial values;
+    // we use several custom plugins, defined at the bottom of the file
+    var planet = planetary.planet();
+    planet.loadPlugin(autocenter({extraHeight: -120}));
+    planet.loadPlugin(autoscale({extraHeight: -120}));
+    planet.loadPlugin(grid())
+    planet.loadPlugin(planetary.plugins.earth({
+        topojson: { file:   '/flux/app/js/planet/world-110m.json' },
+        oceans:   { fill:   '#C3D0E4' },
+        land:     { fill:   '#9DAB78' },
+        borders:  { stroke: '#5B5F32' }
+    }));
+    planet.loadPlugin(planetary.plugins.pings());
+    planet.loadPlugin(planetary.plugins.zoom({
+        scaleExtent: [50, 5000]
+    }));
+    
+    planet.loadPlugin(planetary.plugins.drag({
+        onDragStart: function() {
+        this.plugins.autorotate.pause();
+        },
+        onDragEnd: function() {
+        this.plugins.autorotate.resume();
+        }
+    }));
+    planet.loadPlugin(autorotate(0));
+
+    planet.projection.rotate([100, -10, 0]);
+    planet.draw(canvas);
+
+
+  
+    ////////////////////////////////////////////////////////////////////////////
+    // Listeners ///////////////////////////////////////////////////////////////
+    
+    d3.select('.hideit').on('click', function () {
+        console.log('hideit!');
+        d3.select('.popup').attr('class', 'overlay popup hidden');
+    });
+
+    d3.select('.showit').on('click', function () {
+        console.log('showit!');
+        foo = d3.select('.popup.hidden').attr('class', 'overlay popup');
+    });
+
+    ////////////////////////////////////////////////////////////////////////////
+    // GeoJSON and CSV /////////////////////////////////////////////////////////
+
+    d3.json("/flux/media/out.json", function(error, grid){
+
+        planet.withSavedContext(function(context) {
+       
+
+            var alpha = 1;
+            
+            color = "rgba(" + 50 + "," + 50 + "," + 50 + "," + alpha + ")";
+            context.strokeStyle = color;
+
+            var cells = topojson.feature(grid, grid.objects.cells);
+            
+            context.beginPath();
+            planet.path.context(context)(cells.features[0]);
+            context.stroke();
+            context.fill();
+
+
+        });
+
+
+
+
+    });
+ 
+    
+
+
+});

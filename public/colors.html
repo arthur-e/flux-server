@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/flux/media/css/base.css" />
+    <title>Color Test | spatial.mtri.org/flux</title>
+    <style>
+        .axis path,
+        .axis line {
+          fill: none;
+          stroke: #000;
+          shape-rendering: crispEdges;
+        }
+
+        .axis.label {
+            font-weight: bold;
+        }
+
+        body {
+            overflow-y: scroll;
+        }
+
+        svg {
+            height: 2000px;
+        }
+    </style>
+</head>
+<script>
+window.DEBUG = (window.location.host === 'localhost' || window.location.href.indexOf('localhost') > 0);
+
+if (DEBUG) {
+    var require = {
+        urlArgs: "bust=" +  (new Date()).getTime() //FIXME Remove to enable caching
+    }
+}
+</script>
+<script data-main="/flux/app/colors" src="/flux/app/require.js"></script>
+<body>
+    <section id="context">
+        <header>
+            <div class="banner">
+                <div class="title">Color Test</div>
+                Custom color scales for carbon flux visualization
+            </div>
+        </header>
+    </section>
+</body>
+</html>

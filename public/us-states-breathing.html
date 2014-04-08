@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/flux/media/css/base.css" />
+    <link rel="stylesheet" href="/flux/media/css/controls.css" />
+    <title>Carbon Fluxes by U.S. States | spatial.mtri.org/flux</title>
+</head>
+<style>
+.popup { /*Works with .overlay class*/
+    text-align: left;
+    width: 40%;
+    height: 30%;
+    font-size: 16px;
+}
+
+.popup button.hideit {
+    margin: 0 auto;
+    width: 65px;
+    height: 35px;
+    display: block;
+}
+
+.popup .title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    margin: 0 0 15px 0;
+}
+
+text {
+    font-family: sans-serif;
+    font-weight: bold;
+    fill: #444;
+}
+
+text.year {
+    fill: #ccc;
+}
+</style>
+<script>
+window.DEBUG = (window.location.host === 'localhost' || window.location.href.indexOf('localhost') > 0);
+
+if (DEBUG) {
+    var require = {
+        urlArgs: "bust=" +  (new Date()).getTime() //FIXME Remove to enable caching
+    }
+}
+</script>
+<script data-main="/flux/app/statesBreathing" src="/flux/app/require.js"></script>
+<body>
+    <div class="overlay popup hidden">
+        <div class="title">About this Visualization</div>
+        This visualization demonstrates the spatial aggregation of carbon fluxes.
+        The minimum monthly (or daily) carbon flux from the model is assigned to each state at the approriate time step.
+        Using the minimum value (or maximum value) provides a stable representation of the aggregated fluxes that is not sensitive to the sample size (the number of modeled flux values within the state's boundaries).
+        Both the color and the size of the state represent the flux value.
+        <br /><br />
+        <b>Flux values above the population mean correspond with an increased size of the state</b> (the state is "breathing out" more carbon to the atmosphere).
+        <b>Flux values below the population mean correspond with a decreased size of the state</b> (the state is "inhaling" more carbon from the atmosphere).
+        States with a monthly (or daily) minimum flux value close to the mean appear white in color and take on their normal size with respect to the basemap.
+        <br /><br />
+        <button class="hideit">Okay!</button>
+    </div>
+    <section id="context">
+        <header>
+            <div class="banner">
+                <div class="title">2004 Carbon Flux by U.S. States</div>
+                Minimum <a href="us-states-breathing.html?interval=daily">daily</a> or <a href="us-states-breathing.html?interval=monthly">monthly</a> CASA-GFED carbon flux for each U.S. state visualized in D3.js&mdash;<a class="showit" href="#">Click to learn more</a>
+            </div>
+        </header>
+    </section>
+</body>
+</html>

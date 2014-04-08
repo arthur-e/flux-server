@@ -1,5 +1,5 @@
 var mongo                   = require('mongodb').MongoClient;
-var PROJ_DIR                = '/usr/local/project/flux-d3';
+var PROJ_DIR                = '/usr/local/project/flux-server';
 var FLUX_PRECISION          = 2; // Floating-point precision for Flux measurements
 var FLUX_VARIANCE_PRECISION = 3; // Floating-point precision for Flux measurements
 var INDEX                   = {}; // The INDEX contains the ordered arrangement of model cells

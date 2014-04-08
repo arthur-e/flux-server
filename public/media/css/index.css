@@ -1,0 +1,177 @@
+a:link,
+a:visited {
+    color: #157;
+}
+
+article {
+    line-height: 1.25em;
+    text-align: left;
+    color: #444;
+}
+
+body,
+svg {
+    width: 100%;
+    height: 100%;
+    background-color: #eee;
+    font-size: 16px;
+    font-family: Helvetica,Arial,sans-serif;
+}
+
+#banner {
+    width: 100%;
+    background-color: #000;
+}
+
+.content {
+    font-size: 12px;
+}
+
+.content article {
+    float: left;
+    margin: 0 2em 0 0;
+}
+
+footer {
+    text-align: left;
+    width: 100%;
+}
+
+footer img {
+    float: right;
+}
+
+.graph {
+    text-align: left;
+    color: #000;
+    margin: 0 0 1em 0;
+}
+
+header {
+    font-size: 2em;
+    color: #000;
+}
+
+.sidebar {
+    text-align: right;
+    font-size: 16px;
+}
+
+.sidebar article {
+    margin: 0 0 1em 0;
+    text-align: justify;
+}
+
+header,
+.title {
+    font-family: CabinSemiBold,Helvetica,Arial,sans-serif;
+}
+
+.title {
+    font-size: 1.5em;
+    line-height: 1.5em;
+}
+
+.view {
+    background-color: #fff;
+    border: 1px solid #999;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
+    -moz-box-shadow: 0 0 0.25em #666;
+    -webkit-box-shadow: 0 0 0.25em #666;
+    box-shadow: 0 0 0.25em #666;
+    overflow: hidden;
+    filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
+}
+
+.view:hover {
+    filter: grayscale(0%);
+    -webkit-filter: grayscale(0%);
+}
+
+.view.empty {
+    background-color: transparent;
+    border: 1px dotted #999;
+    -moz-box-shadow: 0 0 0.25em #ddd;
+    -webkit-box-shadow: 0 0 0.25em #ddd;
+    box-shadow: 0 0 0.25em #ddd;
+}
+
+/* Desktop styles */
+@media only screen and (max-width: 30em) {
+    .content article,
+    .view { width: 100%; }
+
+    .content article {
+        height: auto;
+    }
+
+    #banner {
+        height: 5em;
+        margin: 0 0 0.5em 0;
+    }
+
+    .col {
+        width: 100%;
+        clear: both;
+        line-height: 2em;
+        padding: 0.5em;
+        margin: 0 0 2em 0;
+    }
+
+    header { margin: 0 0 1em 0; }
+
+    .content { width: 100%; }
+    .sidebar { width: 100%; }
+
+    .view {
+        height: 12em;
+        margin: 0 0 0.5em 0;
+    }
+
+}
+
+/* Desktop styles */
+@media only screen and (min-width: 30em) {
+    .content article,
+    .view { width: 25.888em; }
+
+    .content article {
+        height: 25.888em;
+    }
+
+    #banner {
+        height: 5em;
+        margin: 0 0 1em 0;
+    }
+
+    .col {
+        line-height: 2em;
+        padding: 0.5em 0 0.5em 1.5em;
+    }
+
+    header { margin: 0 0 2em 0; }
+
+    .content { width: 50%; }
+    .sidebar { width: 50%; }
+
+    .title {
+        font-size: 1.5em;
+        line-height: 1.5em;
+    }
+
+    .view {
+        height: 16em;
+        margin: 0 0 0.5em 0;
+    }
+}
+
+/* Large desktop styles */
+@media only screen and (min-width: 60em) {
+    .content { width: 70%; }
+    .sidebar { width: 30%; }
+}
+
+

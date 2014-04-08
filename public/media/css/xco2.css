@@ -1,0 +1,87 @@
+@import url(http://fonts.googleapis.com/css?family=Alegreya+Sans+SC:700|Montserrat+Alternates:700);
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #fff;
+}
+
+#context
+{ 
+  background: #fff;
+}
+
+#map {
+  width: 1000px;
+  margin: 0 auto;
+}
+
+#map h1 {
+  position: absolute;
+  width: 1000px;
+}
+
+.background {
+  fill: #C3D0E4;
+  stroke: #000;
+  stroke-width: 1px;
+  pointer-events: all;
+  
+}
+
+.foreground {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1px;
+  pointer-events: all;
+  
+}
+
+.foreground.zooming {
+  
+}
+
+.placeholder {
+  cursor: -webkit-grabbing;
+  cursor: -moz-grabbing;
+cursor: -webkit-grab;
+  cursor: -moz-grab;
+}
+
+.graticule {
+  fill: none;
+  stroke: #636B62;
+  stroke-width: .5px;
+  stroke-dasharray: 2,2;
+}
+
+.land {
+  fill: #9DAB78;
+  stroke: none;
+}
+
+.mesh {
+  stroke: #50576A;
+  stroke-width: .5px;
+  fill: none;
+}
+
+.point {
+  fill: #f00;
+}
+
+.tipheader {
+  font-family: 'Alegreya Sans SC', sans-serif;
+    position:absolute;
+    top:80px;
+    left:20px;
+    font-size: 1.2em;
+}
+
+.tipdata {
+  font-family: 'Montserrat Alternates', sans-serif;
+  position:absolute;
+  top:100px;
+  left:20px;
+  font-size: 2.6em;
+}

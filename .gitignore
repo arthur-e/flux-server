@@ -1,6 +1,6 @@
 syntax: glob
 *~
 node_modules/*
-public/build/*
-public/media/img/*
+public/media/*.json
+public/media/*.kmz
 

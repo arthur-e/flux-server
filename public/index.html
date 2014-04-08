@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/flux/media/css/normalize.css" />
+    <link rel="stylesheet" href="/flux/media/font/Cabin.css" />
+    <link rel="stylesheet" href="/flux/media/css/grid.css" />
+    <link rel="stylesheet" href="/flux/media/css/index.css" />
+    <title>Carbon Flux Visualizations | spatial.mtri.org/flux</title>
+</head>
+<script>
+window.DEBUG = (window.location.host === 'localhost' || window.location.href.indexOf('localhost') > 0);
+
+if (DEBUG) {
+    var require = {
+        urlArgs: "bust=" +  (new Date()).getTime() //FIXME Remove to enable caching
+    }
+}
+</script>
+<script data-main="/flux/app/index" src="/flux/app/require.js"></script>
+<body>
+
+    <div id="banner">
+    </div>
+
+    <section class="col sidebar">
+        <header>Carbon Flux Visualizations</header>
+        <article>
+            <div class="graph">
+                <b>K. Arthur Endsley<a href="#f1"><sup>1</sup></a></b>
+                <br />Research Scientist, MTRI
+            </div>
+            <div class="graph">
+                <b>Michael G. Billmire<a href="#f2"><sup>2</sup></a></b>
+                <br />Research Scientist, MTRI
+            </div>
+            <div class="graph">
+                <b>Nicholas Molen</b>
+                <br />Assistant Research Scientist, MTRI
+            </div>
+        </article>
+        <article>
+            <div class="title">Background</div>
+            The need to quantify, monitor and understand natural and anthropogenic fluxes of carbon dioxide (CO<sub>2</sub>) has grown over the past decade.
+            Observations from satellite systems are increasingly playing an important role in monitoring atmospheric CO<sub>2</sub>, providing data at spatial and temporal resolutions, and with spatial coverage, that are not possible using only a ground-based network (e.g. flux towers).
+        </article>
+        <article>
+            Previous work by our collaborators (<a href="http://dge.stanford.edu/labs/michalaklab/CO2DAAD/index.html" target="_blank">Michalak et al. 2004</a>, Gourdji et al. 2008, Mueller et al. 2008) has led to the development of a Geostatistical Inverse Modeling (GIM) framework that makes it possible to estimate fluxes of CO<sub>2</sub> at fine spatial and temporal resolutions and to include ancillary data from satellite sensors without relying on assumptions about the prior flux distribution.
+            Using a number of applications in which the GIM will be run under different scenarios and with different atmospheric and biospheric models, they are investigating (i) the role of existing satellite observations in monitoring the North American carbon cycle and (ii) the net carbon balance of the North American continent.
+        </article>
+        <article>
+            In order to organize and efficiently share these results with the larger scientific community, we are developing a series of interconnected data visualizations and making them available on "the World Wide Web."
+            Recent advances in web-based geospatial software, from KML APIs to geospatial databases, have enabled distributed web visualizations with both spatial and temporal components easier to share.
+        </article>
+        <footer>
+            <a name="f1"><b><sup>1</sup></b><a href="mailto:kaendsle@mtu.edu">kaendsle@mtu.edu</a>
+            <br />
+            <a name="f2"><b><sup>2</sup></b><a href="mailto:mgbillmi@mtu.edu">mgbillmi@mtu.edu</a>
+            <br />
+            <img src="/flux/media/img/mtri_logo.png" />
+        </footer>
+    </section>
+
+    <section class="col content">
+        <div class="row">
+           <article>
+                <a href="/flux/us-states-breathing.html">
+                    <div class="view">
+                        <img class="screencap" src="/flux/media/img/vis_screen_flux_by_states.png" />
+                    </div>
+                </a>
+                <div class="title">Carbon Fluxes Aggregated by U.S. State</div>
+                December, 2003 - December 2004
+                <br />Data: CASA-GFED
+            </article>
+           <article>
+                <a href="/flux/map.html">
+                    <div class="view">
+                        <img class="screencap" src="/flux/media/img/vis_screen_flux_map.png" />
+                    </div>
+                </a>
+                <div class="title">Map of Surface Carbon Fluxes</div>
+                December, 2003 - December 2004
+                <br />Data: CASA-GFED
+            </article>
+            <article>
+                <a href="/flux/media/2014_01_Endsley_OCO-2_Pasadena_example.kmz">
+                    <div class="view">
+                        <img class="screencap" src="/flux/media/img/vis_xco2_kml.png" />
+                    </div>
+                </a>
+                <div class="title">XCO2 in Google Earth</div>
+                <b>Requires Google Earth</b>; Viewing global CO<sub>2</sub> concentration on a virtual globe with KML
+            </article>
+            <article>
+                <a href="/flux/xco2.html">
+                    <div class="view">
+                        <img class="screencap" src="/flux/media/img/vis_xco2_projected_globe.png" />
+                    </div>
+                </a>
+                <div class="title">XCO2 on a Projected Globe</div>
+                Viewing global CO<sub>2</sub> concentration on a projected globe
+            </article>
+            <article>
+                <a href="/flux/colors.html">
+                    <div class="view">
+                        <img class="screencap" src="/flux/media/img/vis_screen_color_test.png" />
+                    </div>
+                </a>
+                <div class="title">Color Scale Testing</div>
+                Comparing saturation, lightness of Brewer scales
+            </article>
+            <article>
+                <a href="/flux/map.html">
+                    <div class="view empty">
+                    </div>
+                </a>
+                <div class="title">Coming Soon!</div>
+            </article>
+        </div>
+    </section>
+
+</body>
+</html>

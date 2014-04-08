@@ -1,0 +1,117 @@
+/*Common styles*/
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.axis.label,
+.x.axis text {
+    font: 14px Helvetica,Arial,sans-serif;
+}
+
+.y.axis text {
+    font: 10px Helvetica,Arial,sans-serif;
+}
+
+body {
+    background-color: #eee;
+    font-family: Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+#context {
+    background: #eee;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+#context header,
+svg {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+#context header {
+    font-family: Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 18px;
+    color: #000;
+    text-align: left;
+    clear: both;
+}
+
+#context header .banner {
+    float: left;
+    display: inline-block;
+    padding: 15px 0;
+}
+
+#context header .title {
+    font-size: 36px;
+    line-height: 42px;
+    font-weight: bold;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.overlay {
+    position: absolute;
+    margin: 0 auto;
+    z-index: 9999;
+    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.9);
+    -moz-box-shadow: 0px 0px 6px #333;
+    -webkit-box-shadow: 0px 0px 6px #333;
+    box-shadow: 0px 0px 6px #333;
+    padding: 1%;
+}
+
+.overlay button {
+    background: #000;
+    color: #fff;
+    font-weight: bold;
+}
+
+.overlay button,
+.overlay textarea {
+    border: 1px solid #ddd;
+}
+
+.overlay,
+.overlay button,
+.overlay textarea {
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+}
+
+.overlay textarea {
+    font-family: monospace;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    padding: 4px;
+    position: relative;
+    right: 4px;
+}
+
+svg {
+    margin: 0 auto;
+    clear: both;
+    display: block;
+    border-top: 1px solid #000;
+}
+
+.visible {
+    visibility: inherit;
+}
