@@ -6,12 +6,14 @@
   "dependencies": {
     "requirejs": "latest",
     "d3": "latest",
+    "topojson": "1.1.3",
     "underscore": "1.4.4",
     "backbone": "1.0.0",
     "moment": "latest",
     "numeric": "1.2.6",
     "express": "3.x",
-    "mongodb": "latest"
+    "mongodb": "latest",
+    "queue": "git://github.com/mbostock/queue"
   },
   "devDependencies": {
     "jasmine-node": "latest"
