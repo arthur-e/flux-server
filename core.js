@@ -1,33 +1,32 @@
-var mongo                   = require('mongodb').MongoClient;
-var PROJ_DIR                = '/usr/local/project/flux-server';
-var FLUX_PRECISION          = 2; // Floating-point precision for Flux measurements
+var mongo = require('mongodb').MongoClient;
+var PROJ_DIR = '/usr/local/project/flux-server';
+var FLUX_PRECISION = 2; // Floating-point precision for Flux measurements
 var FLUX_VARIANCE_PRECISION = 3; // Floating-point precision for Flux measurements
-var INDEX                   = {}; // The INDEX contains the ordered arrangement of model cells
-var MODEL_CELLS             = 2635 // Number of resolution cells in the model
-var REGEX                   = {
-                                iso8601: /^\d{4}(-\d{2})?(-\d{2})?(T\d{2}:\d{2})?(:\d{2})?$/,
-                                monthly: /^(\d{4})\-(\d{2})$/, // e.g. 2004-05
-                                yearly: /^(\d{4})/, // e.g. 2004
-                                wktPoint: /^POINT\((-?[\d\.]+)[ +]?(-?[\d\.]+)\)$/
-                            };
-var AGGREGATES              = {
-                                'net': '$sum',
-                                'mean': '$avg',
-                                'min': '$min',
-                                'max': '$max'
-                            };
-var INTERVALS               = {
-                                'daily': '$dayOfYear',
-                                'monthly': '$month',
-                                'annual': '$year'
-                            };
+var INDEX = {}; // The INDEX contains the ordered arrangement of model cells
+var MODEL_CELLS = 2635 // Number of resolution cells in the model
+var REGEX = {
+    iso8601: /^\d{4}(-\d{2})?(-\d{2})?(T\d{2}:\d{2})?(:\d{2})?/,
+    monthly: /^(\d{4})\-(\d{2})$/, // e.g. 2004-05
+    yearly: /^(\d{4})/, // e.g. 2004
+    wktPoint: /^POINT\((-?[\d\.]+)[ +]?(-?[\d\.]+)\)$/
+};
+var AGGREGATES = {
+    'net': '$sum',
+    'mean': '$avg',
+    'min': '$min',
+    'max': '$max'
+};
+var INTERVALS = {
+    'daily': '$dayOfYear',
+    'monthly': '$month',
+    'annual': '$year'
+};
 var db = null;
-var scenarios   = [];
-var metadata    = {};
-var data        = {};
+var scenarios = [];
+var metadata = {};
+var data = {};
 
-var core = 
-{
+var core ={
     init: function(app){
         var self = this;
 
