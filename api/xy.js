@@ -1,6 +1,6 @@
-var core                    = require('../core').core;
-var numeric                 = require('numeric');
-var _                       = require('underscore');
+var core = require('../core').core;
+var numeric = require('numeric');
+var _ = require('underscore');
 
 /**
     GET Parameters:
@@ -11,8 +11,9 @@ var _                       = require('underscore');
 
         Valid combinations: (time), (start, end, aggregate)
  */
-function xy(req, res) {
+function xy (req, res) {
     var collection = core.DATA[req.params.scenario];
+    var verbose = (_.has(req.query, 'verbose'));
 
     if (collection === undefined) {
         return res.send(404, 'Not Found');
@@ -37,7 +38,7 @@ function xy(req, res) {
                 return res.send(404, 'Not Found');
             }
 
-            if (_.has(req.query, 'verbose')) {
+            if (verbose) {
                 // Emit a GeoJSON-compliant FeatureCollection instead
 
                 body = {
@@ -117,6 +118,7 @@ function xy(req, res) {
 
         // This will be consumed in one of the following conditionals
         var result = [];
+
         // Create an empty array
         i = 0;
         while (i < core.MODEL_CELLS) {
@@ -152,11 +154,15 @@ function xy(req, res) {
                 tpl.features = _.chain(result).map(function (v) { // Convert to Number and fix precision
                     return Number(v.toFixed(core.FLUX_PRECISION));
                 }).map(function (value, i) { // Format response body
-                    return {
-                        'v': value,
-                        //'type': 'Point', // Required for compliant GeoJSON
-                        'coordinates': core.INDEX[req.params.scenario][i]
-                    };
+                    if (verbose) {
+                        return {
+                            'v': value,
+                            'type': 'Point', // Required for compliant GeoJSON
+                            'coordinates': core.INDEX[req.params.scenario][i]
+                        };
+                    }
+
+                    return value;
                 }).value()
 
                 return res.send(tpl);
@@ -210,11 +216,15 @@ function xy(req, res) {
                 tpl.features = _.chain(result).map(function (v) { // Convert to Number and fix precision
                     return Number(v.toFixed(core.FLUX_PRECISION));
                 }).map(function (value, i) { // Format response body
-                    return {
-                        'v': value,
-                        //'type': 'Point', // Required for compliant GeoJSON
-                        'coordinates': core.INDEX[req.params.scenario][i]
-                    };
+                    if (verbose) {
+                        return {
+                            'v': value,
+                            'type': 'Point', // Required for compliant GeoJSON
+                            'coordinates': core.INDEX[req.params.scenario][i]
+                        };
+                    }
+
+                    return value;
                 }).value()
 
                 return res.send(tpl);

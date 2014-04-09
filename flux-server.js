@@ -9,12 +9,12 @@ var express = require('express');
 var core    = require('./core').core;
 
 // Route requires //////////////////////////////////////////////////////////////
-var uncert  = require('./api/uncertainty.js').uncert;
-var xy      = require('./api/xy.js').xy;
-var t       = require('./api/t.js').t;
-var stats   = require('./api/stats.js').stats;
+var uncert    = require('./api/uncertainty.js').uncert;
+var xy        = require('./api/xy.js').xy;
+var t         = require('./api/t.js').t;
+var stats     = require('./api/stats.js').stats;
 var scenarios = require('./api/scenario.js').scenario;
-var geom    = require('./api/geometry.js').geometry;
+var geom      = require('./api/geometry.js').geometry;
 
 // Express /////////////////////////////////////////////////////////////////////
 
@@ -57,6 +57,7 @@ app.use(function (err, req, res, next) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Launch //////////////////////////////////////////////////////////////////////
+
 app.listen(8080);
 console.log('Listening on port 8080: http://localhost:8080');
 
