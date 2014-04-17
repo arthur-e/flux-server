@@ -16,6 +16,7 @@ function geometry(req, res){
   var idx = core.INDEX[req.params.scenario];
   var body = {
     type: "MultiPoint",
+    _id: req.params.scenario,
     coordinates: []
   }
 
@@ -40,7 +41,11 @@ function geometryCollection(req, res){
   }
 
   var idx = core.INDEX[req.params.scenario];
-  var body = {type: "GeometryCollection", geometries:[]}
+  var body = {
+    type: "GeometryCollection",
+    _id: req.params.scenario,
+    geometries: []
+  }
   for (var i = 0; i < idx.length; i++) {
     body.geometries.push({type:"Point", coordinates:idx[i]})    
   };
