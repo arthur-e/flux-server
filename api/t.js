@@ -155,6 +155,10 @@ function t (req, res) {
                     if (err !== null) console.log(err);
 
                     return res.send({
+                        properties: {
+                            start: req.query.start,
+                            end: req.query.end
+                        },
                         series: _.map(results, function (doc) {
                             return Number(doc.value.toFixed(core.PRECISION));
                         })
@@ -196,6 +200,10 @@ function t (req, res) {
                     if (err !== null) console.log(err);
 
                     return res.send({
+                        properties: {
+                            start: req.query.start,
+                            end: req.query.end
+                        },
                         series: _.map(results, function (doc) {
                             return Number(doc.value.toFixed(core.PRECISION));
                         })
