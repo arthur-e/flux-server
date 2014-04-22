@@ -1,24 +1,27 @@
-var core                    = require('../core').core;
-var numeric                 = require('numeric');
-var _                       = require('underscore');
+var core = require('../core').core;
+var numeric = require('numeric');
+var _ = require('underscore');
 /**
     GET Parameters:
+        aggregate       [Optional]  Used with: interval, start, end, geom
         coords          [Optional]  Used with: [None]
-        roi             [Optional]  Used with: aggregate, start, end
+        end             [Optional]  Used with: aggregate, interval, start, geom
         geom            [Optional]  Used with: aggregate, start, end
-        start           [Optional]  Used with: aggregate, interval, end, geom, roi
-        end             [Optional]  Used with: aggregate, interval, start, geom, roi
-        aggregate       [Optional]  Used with: interval, start, end, geom, roi
         interval        [Optional]  Used with: aggregate, start, end
+        start           [Optional]  Used with: aggregate, interval, end, geom
 
-        Valid combinations: (coords), (start, end, aggregate, interval),
-            (start, end, roi, aggregate), (start, end, geom, aggregate)
+        Valid combinations:
+            (coords),
+            (start, end, aggregate, geom),
+            (start, end, aggregate, interval),
+            (start, end, aggregate),
  */
 
-function t(req, res) {
+function t (req, res) {
     var body, coords, argument, i, idx;
-
     var collection = core.DATA[req.params.scenario];
+    var aggregate = {};
+    var interval = {};
 
     if (collection === undefined) {
         return res.send(404, 'Not Found');
@@ -28,7 +31,7 @@ function t(req, res) {
         return res.send(400, 'Bad Request');
     }
 
-    numeric.precision = core.FLUX_PRECISION;
+    numeric.precision = core.PRECISION;
 
     ////////////////////////////////////////////////////////////////////////////
     // T Data (Time Series) ////////////////////////////////////////////////////
@@ -62,10 +65,10 @@ function t(req, res) {
             }
 
             items.forEach(function (v, i) {
-              body.properties.push({
-                'flux': v.values[idx].toFixed(core.FLUX_PRECISION),
-                'timestamp': v._id.toISOString().split('.')[0] // Round off excess precision
-              });
+                body.properties.push({
+                    'v': Number(v.values[idx].toFixed(core.PRECISION)),
+                    'timestamp': v._id.toISOString().split('.')[0] // Round off excess precision
+                });
             });
 
             // Send the response as a json object
@@ -82,180 +85,85 @@ function t(req, res) {
             return res.send(400, 'Bad Request');
         }
 
-        // roi /////////////////////////////////////////////////////////////////
-        if (_.has(req.query, 'roi')) {
-
-            // roi parameter constraints
-            if (!_.contains(['continent'], req.query.roi)) {
-                return res.send(400, 'Bad Request');
-            }
-
-            // positive || negative ////////////////////////////////////////////
-            if (_.contains(['positive', 'negative'], req.query.aggregate)) {
-
-                collection.find({
-                    '_id': {
-                        '$gte': new Date(req.query.start),
-                        '$lte': new Date(req.query.end)
-                    }
-                }).sort([['_id', 1]]).toArray(function (err, results) {
-                    if (err !== null) console.log(err);
-
-                    // Update the documents in the results
-                    results = _.map(results, function (doc) {
-
-                        // Sum the values, filtered to positive or negative only
-                        doc.value = numeric.sum(_.map(doc.values, function (v) {
-                            if (req.query.aggregate === 'positive') {
-                                return (v > 0) ? v : 0;
-
-                            } else {
-                                return (v < 0) ? v : 0;
-
-                            }
-
-                        })).toFixed(core.FLUX_PRECISION);
-
-                        // We've renamed the "values" field to "value"
-                        delete doc.values;
-
-                        return doc;
-                    });
-
-                    return res.send({
-                        series: results
-                    });
-                });
-
-            // net || mean || min || max ///////////////////////////////////////
-            } else {
-
-                // Need to define property names dependent on the query given
-                var aggregate = {};
-
-                // Creates object aggregate e.g. {'$sum': '$values'}
-                Object.defineProperty(aggregate, core.AGGREGATES[req.query.aggregate], {
-                    enumerable: true,
-                    value: '$values'
-                });
-
-                collection.aggregate({
-                    '$match': {
-                        '_id': {
-                            '$gte': new Date(req.query.start),
-                            '$lte': new Date(req.query.end)
-                        }
-                    }
-                }, {'$unwind': '$values'}, {
-                    '$group': {
-                        '_id': '$_id',
-                        'values': aggregate
-                    }
-                }, {
-                    '$sort': {
-                        '_id': 1
-                    }
-                }, {
-                    '$project': {
-                        'value': '$values',
-                    }
-                }, function (err, results) {
-                    if (err !== null) console.log(err);
-
-                    // Remove the milliseconds and UTC identifier
-                    results = _.map(results, function (doc) {
-                        doc._id = doc._id.toISOString().split('.').shift()
-                        return doc;
-                    });
-
-                    return res.send({
-                        series: results // aggregate outputs with "result" attribute
-                    });
-                });
-
-            }
-
         // geom ////////////////////////////////////////////////////////////////
-        } else if (_.has(req.query, 'geom')) {
+        if (_.has(req.query, 'geom')) {
 
             return res.send(501, 'Not Implemented'); //TODO
-
 
         // start && end ////////////////////////////////////////////////////////
         } else {
 
-            // interval parameter constraints
-            if (_.has(req.query, 'interval')) {
-                if (!_.contains(['daily', 'monthly', 'annual'], req.query.interval)) {
-                    return res.send(400, 'Bad Request');
-                }
-            }
-        
             // start && end parameter constraints
             if (!core.REGEX.iso8601.test(req.query.start) || !core.REGEX.iso8601.test(req.query.end)) {
                 return res.send(400, 'Bad Request');
             }
 
-            // positive || negative ////////////////////////////////////////////
-            if (_.contains(['positive', 'negative'], req.query.aggregate)) {
-
-                //New implementation using the aggregation framework. Response time averages around 4.3 seconds. 
-                collection.aggregate(
-                {
-                   $match: 
-                    {
-                        _id:
-                        {
-                            $gte: new Date(req.query.start), $lte: new Date(req.query.end)
-                        }
-                    }
-                }, 
-
-                {
-                    $unwind: '$values'
-                }, 
-
-                {
-                    $match: {values: {$gt: 0}}
-                }, 
-
-                {
-                    $group: 
-                    {
-                        _id: {$month: '$_id'}, 
-                        values: {'$sum': '$values'}
-                    }
-                }, 
-
-                {
-                    $sort: {_id: 1}
-                }, 
-
-                {
-                    $project: {value: '$values'}
-                }, 
-                function (err, results) {
-                    if (err !== null) console.log(err);
-
-                    return res.send({
-                        series: results // mapReduce outputs with "results" attribute
-                    });
-                });
-
-
-            // net || mean || min || max ///////////////////////////////////////
-            } else {
+            if (_.has(req.query, 'interval')) {
+                // interval parameter constraints
+                if (!_.contains(['daily', 'monthly', 'annual'], req.query.interval)) {
+                    return res.send(400, 'Bad Request');
+                }
 
                 // Need to define property names dependent on the query given
-                var aggregate = {};
-                var interval = {};
-
                 // Creates object interval e.g. {'$dayOfYear': '$_id'}
                 Object.defineProperty(interval, core.INTERVALS[req.query.interval], {
                     enumerable: true,
                     value: '$_id'
                 });
 
+            } else {
+                // Default to the temporal resolution of the data (no temporal
+                //  aggregation)
+                interval = '$_id';
+            }
+
+            // positive || negative ////////////////////////////////////////////
+            if (_.contains(['positive', 'negative'], req.query.aggregate)) {
+
+                // Creates object aggregate e.g. {'$gte': 0}
+                Object.defineProperty(aggregate, core.AGGREGATES[req.query.aggregate], {
+                    enumerable: true,
+                    value: 0
+                });
+
+                // New implementation using the aggregation framework.
+                //  Response time averages around 4.3 seconds. 
+                collection.aggregate({
+                    '$match': {
+                        _id: {
+                            $gte: new Date(req.query.start),
+                            $lte: new Date(req.query.end)
+                        }
+                    }
+                }, {
+                    '$unwind': '$values'
+                }, {
+                    '$match': {
+                        values: aggregate
+                    }
+                }, {
+                    '$group': {
+                        '_id': interval,
+                        values: { '$sum': '$values' }
+                    }
+                }, {
+                    '$sort': { _id: 1 }
+                }, {
+                    '$project': { value: '$values' }
+
+                }, function (err, results) {
+                    if (err !== null) console.log(err);
+
+                    return res.send({
+                        series: _.map(results, function (doc) {
+                            return Number(doc.value.toFixed(core.PRECISION));
+                        })
+                    });
+                });
+
+            // net || mean || min || max ///////////////////////////////////////
+            } else {
+
                 // Creates object aggregate e.g. {'$sum': '$values'}
                 Object.defineProperty(aggregate, core.AGGREGATES[req.query.aggregate], {
                     enumerable: true,
@@ -269,7 +177,9 @@ function t(req, res) {
                             '$lte': new Date(req.query.end)
                         }
                     }
-                }, {'$unwind': '$values'}, {
+                }, {
+                    '$unwind': '$values'
+                }, {
                     '$group': {
                         '_id': interval,
                         'values': aggregate
@@ -286,7 +196,9 @@ function t(req, res) {
                     if (err !== null) console.log(err);
 
                     return res.send({
-                        series: results // aggregate outputs with "result" attribute
+                        series: _.map(results, function (doc) {
+                            return Number(doc.value.toFixed(core.PRECISION));
+                        })
                     });
                 });
 

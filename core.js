@@ -1,7 +1,7 @@
 var mongo = require('mongodb').MongoClient;
 var PROJ_DIR = '/usr/local/project/flux-server';
-var FLUX_PRECISION = 2; // Floating-point precision for Flux measurements
-var FLUX_VARIANCE_PRECISION = 3; // Floating-point precision for Flux measurements
+var PRECISION = 2; // Floating-point precision for Flux measurements
+var VARIANCE_PRECISION = 3; // Floating-point precision for Flux measurements
 var INDEX = {}; // The INDEX contains the ordered arrangement of model cells
 var MODEL_CELLS = 2635 // Number of resolution cells in the model
 var REGEX = {
@@ -14,7 +14,9 @@ var AGGREGATES = {
     'net': '$sum',
     'mean': '$avg',
     'min': '$min',
-    'max': '$max'
+    'max': '$max',
+    'positive': '$gte',
+    'negative': '$lte'
 };
 var INTERVALS = {
     'daily': '$dayOfYear',
@@ -70,8 +72,8 @@ var core ={
         });
 
         self.PROJ_DIR                = PROJ_DIR;
-        self.FLUX_PRECISION          = FLUX_PRECISION;
-        self.FLUX_VARIANCE_PRECISION = FLUX_VARIANCE_PRECISION;
+        self.PRECISION               = PRECISION;
+        self.VARIANCE_PRECISION      = VARIANCE_PRECISION;
         self.INDEX                   = INDEX;
         self.MODEL_CELLS             = MODEL_CELLS;
         self.REGEX                   = REGEX;

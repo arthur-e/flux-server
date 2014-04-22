@@ -19,7 +19,7 @@ function xy (req, res) {
         return res.send(404, 'Not Found');
     }
     
-    numeric.precision = core.FLUX_PRECISION;
+    numeric.precision = core.PRECISION;
 
     ////////////////////////////////////////////////////////////////////////////
     // XY Data (Maps) //////////////////////////////////////////////////////////
@@ -52,7 +52,7 @@ function xy (req, res) {
                         'type': 'Point',
                         'coordinates': core.INDEX[req.params.scenario][i],
                         'properties': {
-                            'v': Number(v.toFixed(core.FLUX_PRECISION)),
+                            'v': Number(v.toFixed(core.PRECISION)),
                         }
                     });
                 });
@@ -64,7 +64,7 @@ function xy (req, res) {
                 };
 
                 map[0].values.forEach(function (v, i) {
-                    body.features.push(Number(v.toFixed(core.FLUX_PRECISION)));
+                    body.features.push(Number(v.toFixed(core.PRECISION)));
                 });
 
             }
@@ -152,7 +152,7 @@ function xy (req, res) {
 
                 tpl = _.clone(template);
                 tpl.features = _.chain(result).map(function (v) { // Convert to Number and fix precision
-                    return Number(v.toFixed(core.FLUX_PRECISION));
+                    return Number(v.toFixed(core.PRECISION));
                 }).map(function (value, i) { // Format response body
                     if (verbose) {
                         return {
@@ -208,13 +208,13 @@ function xy (req, res) {
                 if (req.query.aggregate === 'mean') {
                     // Divide by the number of Arrays thus summed
                     result = _.map(numeric.div(result, docs.length), function (v) {
-                        return Number(v.toFixed(core.FLUX_PRECISION));
+                        return Number(v.toFixed(core.PRECISION));
                     });
                 }
 
                 tpl = _.clone(template);
                 tpl.features = _.chain(result).map(function (v) { // Convert to Number and fix precision
-                    return Number(v.toFixed(core.FLUX_PRECISION));
+                    return Number(v.toFixed(core.PRECISION));
                 }).map(function (value, i) { // Format response body
                     if (verbose) {
                         return {

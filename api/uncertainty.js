@@ -23,7 +23,7 @@ function uncert(req, res) {
         return res.send(404, 'Not Found');
     }
 
-    numeric.precision = core.FLUX_VARIANCE_PRECISION;
+    numeric.precision = core.VARIANCE_PRECISION;
 
     // time ////////////////////////////////////////////////////////////////////
     if (_.has(req.query, 'time')) {
@@ -55,7 +55,7 @@ function uncert(req, res) {
 
                 docs[0].v.forEach(function (v, i) {
                     body.features.push({
-                        'covariance': v.toFixed(core.FLUX_VARIANCE_PRECISION),
+                        'covariance': v.toFixed(core.VARIANCE_PRECISION),
                         'coordinates': core.INDEX[req.params.scenario][i]
                     });
                 });
@@ -93,7 +93,7 @@ function uncert(req, res) {
                     // body.values[i] = doc.v.slice(0, i + 1);
 
                     body.features.push({
-                        'variance': doc.v[i].toFixed(core.FLUX_VARIANCE_PRECISION),
+                        'variance': doc.v[i].toFixed(core.VARIANCE_PRECISION),
                         'coordinates': core.INDEX[req.params.scenario][i]
                     });
 
