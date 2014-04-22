@@ -1,6 +1,6 @@
-var core                    = require('../core').core;
-var numeric                 = require('numeric');
-var _                       = require('underscore');
+var core = require('../core').core;
+var numeric = require('numeric');
+var _ = require('underscore');
 
 /**
     GET Parameters:
@@ -14,7 +14,7 @@ var _                       = require('underscore');
         Valid combinations: (time), (time, covarianceAt), (start, end),
             (start, end, source, target), (source, target)
  */
-function uncert(req, res) {
+function uncert (req, res) {
     var argument, collection, coords, idx, start, end, source, target;
 
     collection = core.DATA[req.params.scenario];
@@ -87,7 +87,7 @@ function uncert(req, res) {
                     //  and trim it according to its position--generates a
                     //  lower-triangular matrix
                     // Set outside the loop:
-                    // body.values.length = MODEL_CELLS;
+                    // body.values.length = core.INDEX.length;
                     //
                     // Then:
                     // body.values[i] = doc.v.slice(0, i + 1);

@@ -3,7 +3,6 @@ var PROJ_DIR = '/usr/local/project/flux-server';
 var PRECISION = 2; // Floating-point precision for Flux measurements
 var VARIANCE_PRECISION = 3; // Floating-point precision for Flux measurements
 var INDEX = {}; // The INDEX contains the ordered arrangement of model cells
-var MODEL_CELLS = 2635 // Number of resolution cells in the model
 var REGEX = {
     iso8601: /^\d{4}(-\d{2})?(-\d{2})?(T\d{2}:\d{2})?(:\d{2})?/,
     monthly: /^(\d{4})\-(\d{2})$/, // e.g. 2004-05
@@ -29,19 +28,22 @@ var metadata = {};
 var data = {};
 
 var core ={
-    init: function(app){
+    init: function (app){
         var self = this;
 
         // See discussion on this design pattern: https://groups.google.com/forum/#!msg/node-mongodb-native/mSGnnuG8C1o/Hiaqvdu1bWoJ
         mongo.connect('mongodb://localhost:27017/fluxvis', function (err, db) {
             var body = null;
-            if (err) {return console.dir(err);}
+            if (err) {
+                return console.dir(err);
+            }
             
-            //Grab the list of scenarios stored in mongo
-            db.collection('metadata').find({},{'_id':1}).toArray(function(err,results){
-
-                for (var i = 0; i < results.length; i++) 
-                {
+            // Grab the list of scenarios stored in mongo
+            db.collection('metadata').find({}, {
+                '_id':1
+            }).toArray(function (err, results) {
+                var i;
+                for (i = 0; i < results.length; i+=1){
                     //Array containing the scenario strings. This is returned by the
                     //scenarios endpoint
                     scenarios.push(results[i]._id);
@@ -49,48 +51,41 @@ var core ={
                     data[results[i]._id] = db.collection(results[i]._id);
 
                 };                
-
-
             });
 
-            //Grab the metadata
-            db.collection('metadata').find().toArray(function(err, docs) {
-                for (var i = 0; i < docs.length; i++) {
+            // Grab the metadata
+            db.collection('metadata').find().toArray(function (err, docs) {
+                var i;
+                for (i = 0; i < docs.length; i+=1) {
                     metadata[docs[i]._id] = docs[i];                    
                 };
             });
             
-            //Grab the indices
+            // Grab the indices
             db.collection('coord_index').find().toArray(function (err, idx) {
-                
-                for (var i = 0; i < idx.length; i++) {
+                var i;
+                for (i = 0; i < idx.length; i+=1) {
                     INDEX[idx[i]._id] = idx[i].i;
-
                 };
             });
 
         });
 
-        self.PROJ_DIR                = PROJ_DIR;
-        self.PRECISION               = PRECISION;
-        self.VARIANCE_PRECISION      = VARIANCE_PRECISION;
-        self.INDEX                   = INDEX;
-        self.MODEL_CELLS             = MODEL_CELLS;
-        self.REGEX                   = REGEX;
-        self.AGGREGATES              = AGGREGATES;
-        self.INTERVALS               = INTERVALS;
-        self.SCENARIOS               = scenarios;
-        self.METADATA                = metadata;
-        self.DATA                    = data;
-        self.DB                      = db;
+        self.PROJ_DIR           = PROJ_DIR;
+        self.PRECISION          = PRECISION;
+        self.VARIANCE_PRECISION = VARIANCE_PRECISION;
+        self.INDEX              = INDEX;
+        self.REGEX              = REGEX;
+        self.AGGREGATES         = AGGREGATES;
+        self.INTERVALS          = INTERVALS;
+        self.SCENARIOS          = scenarios;
+        self.METADATA           = metadata;
+        self.DATA               = data;
+        self.DB                 = db;
 
         self.app = (app) ? app : null;
 
-
     },
-
-
-    
 
     /**
         Generates a map function (for a map-reduce workflow) that will group values
@@ -207,7 +202,6 @@ var core ={
         //      the error text, so the user knows why it failed. Probably dump it 
         //      to the log, as well.
         
-
         // Find the corresponding index of the grid cell
         i = 0;
         while (i < INDEX[scn].length) {

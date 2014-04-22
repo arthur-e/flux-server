@@ -121,7 +121,7 @@ function xy (req, res) {
 
         // Create an empty array
         i = 0;
-        while (i < core.MODEL_CELLS) {
+        while (i < core.INDEX.length) {
             result.push(0);
             i += 1;
         }
