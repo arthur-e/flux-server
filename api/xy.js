@@ -121,7 +121,7 @@ function xy (req, res) {
 
         // Create an empty array
         i = 0;
-        while (i < core.INDEX.length) {
+        while (i < core.INDEX[req.params.scenario].length) {
             result.push(0);
             i += 1;
         }
@@ -176,6 +176,14 @@ function xy (req, res) {
             definition.push(function (err, docs) {
                 var i, tpl;
 
+                if (err) {
+                    if (err.code === 16389) {
+                        return res.send(413, 'Request Entity Too Large');
+                    }
+
+                    return console.log(err);
+                }
+
                 switch (req.query.aggregate) {
 
                     case 'negative':
@@ -207,9 +215,7 @@ function xy (req, res) {
 
                 if (req.query.aggregate === 'mean') {
                     // Divide by the number of Arrays thus summed
-                    result = _.map(numeric.div(result, docs.length), function (v) {
-                        return Number(v.toFixed(core.PRECISION));
-                    });
+                    result = numeric.div(result, docs.length);
                 }
 
                 tpl = _.clone(template);

@@ -87,7 +87,7 @@ function uncert (req, res) {
                     //  and trim it according to its position--generates a
                     //  lower-triangular matrix
                     // Set outside the loop:
-                    // body.values.length = core.INDEX.length;
+                    // body.values.length = core.INDEX[req.params.scenario].length;
                     //
                     // Then:
                     // body.values[i] = doc.v.slice(0, i + 1);
