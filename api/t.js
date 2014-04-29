@@ -152,7 +152,13 @@ function t (req, res) {
                     '$project': { value: '$values' }
 
                 }, function (err, results) {
-                    if (err !== null) console.log(err);
+                    if (err) {
+                        if (err.code === 16389) {
+                            return res.send(413, 'Request Entity Too Large');
+                        }
+
+                        return console.log(err);
+                    }
 
                     return res.send({
                         properties: {
@@ -197,7 +203,13 @@ function t (req, res) {
                         'value': '$values',
                     }
                 }, function (err, results) {
-                    if (err !== null) console.log(err);
+                    if (err) {
+                        if (err.code === 16389) {
+                            return res.send(413, 'Request Entity Too Large');
+                        }
+
+                        return console.log(err);
+                    }
 
                     return res.send({
                         properties: {

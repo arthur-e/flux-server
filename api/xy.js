@@ -133,6 +133,14 @@ function xy (req, res) {
             definition.push(function (err, docs) {
                 var i, tpl;
 
+                if (err) {
+                    if (err.code === 16389) {
+                        return res.send(413, 'Request Entity Too Large');
+                    }
+
+                    return console.log(err);
+                }
+
                 // Sum two Arrays at a time to get the total flux value in each cell
                 _.each(docs, function (doc, i) {
                     if (i === 0) { // Start with the first document...
