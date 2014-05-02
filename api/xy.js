@@ -78,11 +78,9 @@ function xy (req, res) {
 
     } else if (_.has(req.query, 'aggregate')) {
 
-        ['start', 'end'].forEach(function (key) {
-            if (!_.has(req.query, key)) {
-                return res.send(400, 'Bad Request');
-            }
-        });
+        if (!_.has(req.query, 'start') || !_.has(req.query, 'end')) {
+            return res.send(400, 'Bad Request');
+        }
 
         // start && end parameter constraints
         if (!core.REGEX.iso8601.test(req.query.start) || !core.REGEX.iso8601.test(req.query.end)) {

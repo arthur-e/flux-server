@@ -31,6 +31,11 @@ function t (req, res) {
         return res.send(400, 'Bad Request');
     }
 
+    // start && end parameter constraints
+    if (!core.REGEX.iso8601.test(req.query.start) || !core.REGEX.iso8601.test(req.query.end)) {
+        return res.send(400, 'Bad Request');
+    }
+
     numeric.precision = core.PRECISION;
 
     ////////////////////////////////////////////////////////////////////////////
