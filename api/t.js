@@ -38,12 +38,12 @@ function t (req, res) {
 
     if (_.has(req.query, 'coords')) {
         coords = core.pointCoords(req.query.coords);
-        idx = core.getCellIndex(coords);
+        idx = core.getCellIndex(coords, req.params.scenario);
 
         if (idx === undefined) {
             return res.send(404, 'Not Found');
         }
-        
+
         collection.find({
             '_id': {
                 '$gte': new Date(req.query.start),
@@ -59,17 +59,15 @@ function t (req, res) {
             }
 
             body = {
-              'coordinates': coords,
-                //'type': 'Point', // Required for compliant GeoJSON
-              'properties': []
+                'series': items.map(function (v, i) {
+                    return Number(v.values[idx].toFixed(core.PRECISION));
+                }),
+                'properties': {
+                    'start': req.query.start,
+                    'end': req.query.end,
+                    'coords': coords
+                }
             }
-
-            items.forEach(function (v, i) {
-                body.properties.push({
-                    'v': Number(v.values[idx].toFixed(core.PRECISION)),
-                    'timestamp': v._id.toISOString().split('.')[0] // Round off excess precision
-                });
-            });
 
             // Send the response as a json object
             res.send(body);

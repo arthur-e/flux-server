@@ -27,8 +27,8 @@ var scenarios = [];
 var metadata = {};
 var data = {};
 
-var core ={
-    init: function (app){
+var core = {
+    init: function (app) {
         var self = this;
 
         // See discussion on this design pattern: https://groups.google.com/forum/#!msg/node-mongodb-native/mSGnnuG8C1o/Hiaqvdu1bWoJ
@@ -88,67 +88,6 @@ var core ={
     },
 
     /**
-        Generates a map function (for a map-reduce workflow) that will group values
-        on the interval specified.
-        @param  interval    {String}    e.g. "daily" || "monthly" || "annual"
-        @param  aggregate   {String}    e.g. "positive" || "negative"
-        @return             {Function}
-     */
-    getIntervalMapFunction: function (interval, aggregate) {
-        if (aggregate === 'positive') {
-            switch (interval) {
-                case 'daily':
-                    return function () {
-                        var k = this._id.getUTCDate();
-                        this.values.forEach(function (value) {
-                            if (value > 0) emit(k, value);
-                        });
-                    }
-                case 'monthly':
-                    return function () {
-                        var k = this._id.getMonth() + 1;
-                        this.values.forEach(function (value) {
-                            if (value > 0) emit(k, value);
-                        });
-                    }
-                case 'annual':
-                    return function () {
-                        var k = this._id.getYear();
-                        this.values.forEach(function (value) {
-                            if (value > 0) emit(k, value);
-                        });
-                    }
-            }
-
-        } else {
-            switch (interval) {
-                case 'daily':
-                    return function () {
-                        var k = this._id.getUTCDate();
-                        this.values.forEach(function (value) {
-                            if (value < 0) emit(k, value);
-                        });
-                    }
-                case 'monthly':
-                    return function () {
-                        var k = this._id.getMonth() + 1;
-                        this.values.forEach(function (value) {
-                            if (value < 0) emit(k, value);
-                        });
-                    }
-                case 'annual':
-                    return function () {
-                        var k = this._id.getYear();
-                        this.values.forEach(function (value) {
-                            if (value < 0) emit(k, value);
-                        });
-                    }
-            }
-
-        }
-    },
-
-    /**
         Given a WKT Point string, extracts and returns the coordinates.
         @param  wktPointString  {String}    e.g. "POINT(-83 42)"
         @return                 {Number}    The index of the model resolution cell
@@ -182,7 +121,6 @@ var core ={
 
     },
 
-
     /**
         Given point coordinates, looks up the index of the corresponding resolution
         cell's coordinates.
@@ -191,17 +129,13 @@ var core ={
         @return         {Number}    The index of the model resolution cell
      */
     getCellIndex: function (coords, scn) {
-        var i;
+        var i, idx;
 
-        //Dirty validation. This could be improved, probably.
-        if (!INDEX[scn]) scn = "default";
+        // Dirty validation. This could be improved, probably.
+        if (INDEX[scn] === undefined) {
+            return;
+        }
 
-        //TODO: Add error handling. If there's no matching scenario, or the length
-        //      of the scenario index doesn't match the coords length, return an 
-        //      error object describing the situation. Send an http response with
-        //      the error text, so the user knows why it failed. Probably dump it 
-        //      to the log, as well.
-        
         // Find the corresponding index of the grid cell
         i = 0;
         while (i < INDEX[scn].length) {
