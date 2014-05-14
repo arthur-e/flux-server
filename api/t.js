@@ -229,6 +229,9 @@ function t (req, res) {
             res.send(body);
         });
 
+    } else {
+        return res.send(400, 'Bad Request');
+
     }
 
 };
