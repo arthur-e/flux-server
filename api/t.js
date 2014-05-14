@@ -39,49 +39,9 @@ function t (req, res) {
     numeric.precision = core.PRECISION;
 
     ////////////////////////////////////////////////////////////////////////////
-    // T Data (Time Series) ////////////////////////////////////////////////////
-
-    if (_.has(req.query, 'coords')) {
-        coords = core.pointCoords(req.query.coords);
-        idx = core.getCellIndex(coords, req.params.scenario);
-
-        if (idx === undefined) {
-            return res.send(404, 'Not Found');
-        }
-
-        collection.find({
-            '_id': {
-                '$gte': new Date(req.query.start),
-                '$lte': new Date(req.query.end)
-            }
-        }).sort({'_id': 1}).toArray(function (err, items) {
-            if (err) return console.log(err);
-
-            if (items.length === 0) {
-                return res.send(404, 'Not Found');
-            } else if (!items[0].hasOwnProperty('values')) {
-                return res.send(404, 'Not Found');
-            }
-
-            body = {
-                'series': items.map(function (v, i) {
-                    return Number(v.values[idx].toFixed(core.PRECISION));
-                }),
-                'properties': {
-                    'start': req.query.start,
-                    'end': req.query.end,
-                    'coords': coords
-                }
-            }
-
-            // Send the response as a json object
-            res.send(body);
-        });
-
-    ////////////////////////////////////////////////////////////////////////////
     // T Aggregation in Space or Time //////////////////////////////////////////
 
-    } else if (_.has(req.query, 'aggregate')) {
+    if (_.has(req.query, 'aggregate')) {
 
         // aggregate parameter constraints
         if (!_.contains(['positive', 'negative', 'net', 'mean', 'min', 'max'], req.query.aggregate)) {
@@ -93,13 +53,13 @@ function t (req, res) {
 
             return res.send(501, 'Not Implemented'); //TODO
 
+        // coords //////////////////////////////////////////////////////////////
+        } else if (_.has(req.query, 'coords')) {
+
+            return res.send(501, 'Not Implemented'); //TODO
+
         // start && end ////////////////////////////////////////////////////////
         } else {
-
-            // start && end parameter constraints
-            if (!core.REGEX.iso8601.test(req.query.start) || !core.REGEX.iso8601.test(req.query.end)) {
-                return res.send(400, 'Bad Request');
-            }
 
             if (_.has(req.query, 'interval')) {
                 // interval parameter constraints
@@ -228,6 +188,46 @@ function t (req, res) {
             }
 
         }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // T Data (Time Series) ////////////////////////////////////////////////////
+
+    } else if (_.has(req.query, 'coords')) {
+        coords = core.pointCoords(req.query.coords);
+        idx = core.getCellIndex(coords, req.params.scenario);
+
+        if (idx === undefined) {
+            return res.send(404, 'Not Found');
+        }
+
+        collection.find({
+            '_id': {
+                '$gte': new Date(req.query.start),
+                '$lte': new Date(req.query.end)
+            }
+        }).sort({'_id': 1}).toArray(function (err, items) {
+            if (err) return console.log(err);
+
+            if (items.length === 0) {
+                return res.send(404, 'Not Found');
+            } else if (!items[0].hasOwnProperty('values')) {
+                return res.send(404, 'Not Found');
+            }
+
+            body = {
+                'series': items.map(function (v, i) {
+                    return Number(v.values[idx].toFixed(core.PRECISION));
+                }),
+                'properties': {
+                    'start': req.query.start,
+                    'end': req.query.end,
+                    'coords': coords
+                }
+            }
+
+            // Send the response as a json object
+            res.send(body);
+        });
 
     }
 

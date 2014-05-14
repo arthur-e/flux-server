@@ -102,7 +102,7 @@ function xy (req, res) {
             }
         }, {
             '$sort': {'_id': 1}
-        }]
+        }];
 
         // What the response body should look like
         var template = {
