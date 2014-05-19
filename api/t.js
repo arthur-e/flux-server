@@ -71,6 +71,10 @@ function t (req, res) {
             coords = core.pointCoords(req.query.coords);
             idx = core.getCellIndex(coords, req.params.scenario);
 
+            if (idx === undefined) {
+                return res.send(400, 'Bad Request');
+            }
+
             collection.find({
                 '_id': {
                     '$gte': new Date(req.query.start),
