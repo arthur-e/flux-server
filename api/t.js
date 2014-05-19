@@ -1,6 +1,8 @@
 var core = require('../core').core;
+var moment = require('../node_modules/moment/moment');
 var numeric = require('numeric');
 var _ = require('underscore');
+
 /**
     GET Parameters:
         aggregate       [Optional]  Used with: interval, start, end, geom
@@ -56,7 +58,126 @@ function t (req, res) {
         // coords //////////////////////////////////////////////////////////////
         } else if (_.has(req.query, 'coords')) {
 
-            return res.send(501, 'Not Implemented'); //TODO
+            if (!_.has(req.query, 'interval')) {
+                return res.send(400, 'Bad Request');
+            }
+
+            // interval parameter constraints
+            if (!_.contains(['daily', 'monthly', 'annual'], req.query.interval)) {
+                return res.send(400, 'Bad Request');
+            }
+
+            // Get the integer value of the cell index
+            coords = core.pointCoords(req.query.coords);
+            idx = core.getCellIndex(coords, req.params.scenario);
+
+            collection.find({
+                '_id': {
+                    '$gte': new Date(req.query.start),
+                    '$lte': new Date(req.query.end)
+                }
+            }).toArray(function (err, docs) {
+                var i = j = 0
+                var unit, t1;
+                var t0 = moment.utc(docs[0]._id);
+                var ds = [];
+                var operation, subop;
+
+                if (err) console.log(err);
+
+                switch (req.query.aggregate) {
+                    case 'positive':
+                    subop = function (s) {
+                        return _.reduce(s, function (memo, v) {
+                            return (v > 0) ? memo + v : memo;
+                        }, 0);
+                    };
+                    break;
+
+                    case 'negative':
+                    subop = function (s) {
+                        return _.reduce(s, function (memo, v) {
+                            return (v < 0) ? memo + v : memo;
+                        }, 0);
+                    };
+                    break;
+
+                    case 'net':
+                    subop = function (s) {
+                        return _.reduce(s, function (memo, v) {
+                            return memo + v;
+                        }, 0);
+                    };
+                    break;
+
+                    case 'mean':
+                    subop = function (s) {
+                        return _.reduce(s, function (memo, v) {
+                            return (memo + v) * 0.5;
+                        }, 0);
+                    };
+                    break;
+
+                    case 'min':
+                    subop = _.min;
+                    break;
+
+                    case 'max':
+                    subop = _.max;
+                    break;
+                }
+
+                switch (req.query.interval) {
+                    case 'hourly':
+                    unit = 'hour';
+                    break;
+
+                    case 'daily':
+                    unit = 'day';
+                    break;
+
+                    case 'monthly':
+                    unit = 'month';
+                    break;
+                }
+
+                operation = function (series) {
+                    return subop(_.map(series, function (serie) {
+                        return serie.values[idx];
+                    }));
+                };
+
+                t1 = t0.clone().add(1, unit);
+                while (j < docs.length) {
+                    if (moment.utc(docs[j]._id).isSame(t1) || moment.utc(docs[j]._id).isAfter(t1)) {
+                        // Call the operation on the subsequence of data from the last
+                        //  time point to the current
+                        if (!moment.utc(docs[j]._id).isSame(t1)) {
+                            ds.push(operation.call(this, docs.slice(i, j)));
+                        } else {
+                            ds.push(operation.call(this, docs.slice(i, j + 1)));
+                        }
+
+                        // Update the forward-looking timestamp
+                        t1.add(1, unit);
+                        i = j;
+                    }
+
+                    j += 1;
+                }
+
+                return res.send({
+                    properties: {
+                        start: req.query.start,
+                        end: req.query.end,
+                        coords: 'POINT(' + coords.join(' ') + ')'
+                    },
+                    series: _.map(ds, function (d) {
+                        return Number(d.toFixed(core.PRECISION));
+                    })
+                });
+
+            });
 
         // start && end ////////////////////////////////////////////////////////
         } else {
