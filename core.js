@@ -18,9 +18,17 @@ var AGGREGATES = {
     'negative': '$lte'
 };
 var INTERVALS = {
-    'daily': '$dayOfYear',
-    'monthly': '$month',
-    'annual': '$year'
+    'daily': {
+        day: { '$dayOfYear': '$_id' },
+        year: { '$year': '$_id' }
+    },
+    'monthly': {
+        month: { '$month': '$_id' },
+        year: { '$year': '$_id' }
+    },
+    'annual': {
+        year: { '$year': '$_id' }
+    }
 };
 var db = null;
 var scenarios = [];

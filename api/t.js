@@ -172,6 +172,8 @@ function t (req, res) {
 
                 return res.send({
                     properties: {
+                        aggregate: req.query.aggregate,
+                        interval: req.query.interval,
                         start: req.query.start,
                         end: req.query.end,
                         coords: 'POINT(' + coords.join(' ') + ')'
@@ -192,12 +194,7 @@ function t (req, res) {
                     return res.send(400, 'Bad Request');
                 }
 
-                // Need to define property names dependent on the query given
-                // Creates object interval e.g. {'$dayOfYear': '$_id'}
-                Object.defineProperty(interval, core.INTERVALS[req.query.interval], {
-                    enumerable: true,
-                    value: '$_id'
-                });
+                interval = core.INTERVALS[req.query.interval];
 
             } else {
                 // Default to the temporal resolution of the data (no temporal
@@ -250,6 +247,8 @@ function t (req, res) {
 
                     return res.send({
                         properties: {
+                            aggregate: req.query.aggregate,
+                            interval: req.query.interval,
                             start: req.query.start,
                             end: req.query.end
                         },
@@ -301,6 +300,8 @@ function t (req, res) {
 
                     return res.send({
                         properties: {
+                            aggregate: req.query.aggregate,
+                            interval: req.query.interval,
                             start: req.query.start,
                             end: req.query.end
                         },
