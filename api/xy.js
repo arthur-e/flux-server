@@ -48,6 +48,10 @@ function xy (req, res) {
                 };
 
                 map[0].values.forEach(function (v, i) {
+                    if (!v) {
+                        return;
+                    }
+
                     body.features.push({
                         'type': 'Point',
                         'coordinates': core.INDEX[req.params.scenario][i],
@@ -64,7 +68,7 @@ function xy (req, res) {
                 };
 
                 map[0].values.forEach(function (v, i) {
-                    body.features.push(Number(v.toFixed(core.PRECISION)));
+                    body.features.push((v) ? Number(v.toFixed(core.PRECISION)) : v);
                 });
 
             }
