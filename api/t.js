@@ -20,10 +20,9 @@ var _ = require('underscore');
  */
 
 function t (req, res) {
-    var body, coords, argument, i, idx;
+    var body, coords, grouping, i, idx, projection;
     var collection = core.DATA[req.params.scenario];
     var aggregate = {};
-    var interval = {};
 
     if (collection === undefined) {
         return res.send(404, 'Not Found');
@@ -185,7 +184,7 @@ function t (req, res) {
 
             });
 
-        // start && end ////////////////////////////////////////////////////////
+        // interval? && start && end && aggregate //////////////////////////////
         } else {
 
             if (_.has(req.query, 'interval')) {
@@ -194,12 +193,23 @@ function t (req, res) {
                     return res.send(400, 'Bad Request');
                 }
 
-                interval = core.INTERVALS[req.query.interval];
+                projection = core.INTERVALS[req.query.interval];
+                grouping = {
+                    'year': '$year',
+                    'month': '$month',
+                    'day': '$day',
+                    'hour': '$hour',
+                    'minute': '$minute'
+                };
 
             } else {
                 // Default to the temporal resolution of the data (no temporal
                 //  aggregation)
-                interval = '$_id';
+                projection = {
+                    '_id': '$_id',
+                    'values': '$values'
+                };
+                grouping = '$_id';
             }
 
             // positive || negative ////////////////////////////////////////////
@@ -215,27 +225,28 @@ function t (req, res) {
                 //  Response time averages around 4.3 seconds. 
                 collection.aggregate({
                     '$match': {
-                        _id: {
+                        '_id': {
                             $gte: new Date(req.query.start),
                             $lte: new Date(req.query.end)
                         }
                     }
                 }, {
+                    '$project': projection
+                }, {
                     '$unwind': '$values'
                 }, {
                     '$match': {
-                        values: aggregate
+                        'values': aggregate
                     }
                 }, {
                     '$group': {
-                        '_id': interval,
-                        values: { '$sum': '$values' }
+                        '_id': grouping,
+                        'values': { '$sum': '$values' }
                     }
                 }, {
-                    '$sort': { _id: 1 }
-                }, {
-                    '$project': { value: '$values' }
-
+                    '$sort': {
+                        '_id': 1
+                    }
                 }, function (err, results) {
                     if (err) {
                         if (err.code === 16389) {
@@ -253,7 +264,7 @@ function t (req, res) {
                             end: req.query.end
                         },
                         series: _.map(results, function (doc) {
-                            return Number(doc.value.toFixed(core.PRECISION));
+                            return Number(doc.values.toFixed(core.PRECISION));
                         })
                     });
                 });
@@ -275,19 +286,17 @@ function t (req, res) {
                         }
                     }
                 }, {
+                    '$project': projection
+                }, {
                     '$unwind': '$values'
                 }, {
                     '$group': {
-                        '_id': interval,
+                        '_id': grouping,
                         'values': aggregate
                     }
                 }, {
                     '$sort': {
                         '_id': 1
-                    }
-                }, {
-                    '$project': {
-                        'value': '$values',
                     }
                 }, function (err, results) {
                     if (err) {
@@ -306,7 +315,7 @@ function t (req, res) {
                             end: req.query.end
                         },
                         series: _.map(results, function (doc) {
-                            return Number(doc.value.toFixed(core.PRECISION));
+                            return Number(doc.values.toFixed(core.PRECISION));
                         })
                     });
                 });
@@ -341,13 +350,13 @@ function t (req, res) {
             }
 
             body = {
-                'series': items.map(function (v, i) {
+                series: items.map(function (v, i) {
                     return Number(v.values[idx].toFixed(core.PRECISION));
                 }),
-                'properties': {
-                    'start': req.query.start,
-                    'end': req.query.end,
-                    'coords': coords
+                properties: {
+                    start: req.query.start,
+                    end: req.query.end,
+                    coords: coords
                 }
             }
 
@@ -363,3 +372,5 @@ function t (req, res) {
 };
 
 exports.t = t;
+
+

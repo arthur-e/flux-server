@@ -20,14 +20,17 @@ var AGGREGATES = {
 var INTERVALS = {
     'daily': {
         day: { '$dayOfYear': '$_id' },
-        year: { '$year': '$_id' }
+        year: { '$year': '$_id' },
+        values: 1
     },
     'monthly': {
         month: { '$month': '$_id' },
-        year: { '$year': '$_id' }
+        year: { '$year': '$_id' },
+        values: 1
     },
     'annual': {
-        year: { '$year': '$_id' }
+        year: { '$year': '$_id' },
+        values: 1
     }
 };
 var db = null;
