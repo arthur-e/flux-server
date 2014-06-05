@@ -14,7 +14,7 @@ var xy        = require('./api/xy.js').xy;
 var t         = require('./api/t.js').t;
 var stats     = require('./api/stats.js').stats;
 var scenarios = require('./api/scenario.js').scenario;
-var geom      = require('./api/geometry.js').geometry;
+var grid      = require('./api/grid.js').grid;
 
 // Express /////////////////////////////////////////////////////////////////////
 
@@ -42,7 +42,7 @@ app.use('/flux/api', express.static(core.PROJ_DIR + '/api'));
 //Bring in all the routes here
 app.get('/flux/api/scenarios.json', scenarios);
 app.get('/flux/api/scenarios/:scenario.json', scenarios);
-app.get('/flux/api/scenarios/:scenario/geometry.json', geom);
+app.get('/flux/api/scenarios/:scenario/grid.json', grid);
 app.get('/flux/api/scenarios/:scenario/uncertainty.json', uncert);
 app.get('/flux/api/scenarios/:scenario/xy.json', xy);
 app.get('/flux/api/scenarios/:scenario/t.json', t);

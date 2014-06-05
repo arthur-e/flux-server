@@ -1,6 +1,6 @@
 {
   "name": "flux-server",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "private": true,
   "preferGlobal": false,
   "dependencies": {
@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "/net/nas3/data/gis_lab/project/NASA_ACOS_Visualization/git/flux-d3/"
+    "url": "git@github.com:arthur-e/flux-server.git"
   },
   "scripts": {
     "preinstall": "sudo npm install forever -g;"
