@@ -5,16 +5,20 @@ var _ = require('underscore');
 
 /**
     GET Parameters:
-        aggregate       [Optional]  Used with: interval, start, end, geom
-        coords          [Optional]  Used with: [None]
-        end             [Optional]  Used with: aggregate, interval, start, geom
-        geom            [Optional]  Used with: aggregate, start, end
-        interval        [Optional]  Used with: aggregate, start, end
-        start           [Optional]  Used with: aggregate, interval, end, geom
+        aggregate       [Optional]  Used with: coords, interval, start, end, geom
+        coords          [Optional]  Used with: aggregate, interval, start, end
+        end             [Optional]  Used with: aggregate, coords, interval, start, geom
+        geom            [Optional]  Used with: aggregate, coords, start, end
+        interval        [Optional]  Used with: aggregate, coords, start, end
+        start           [Optional]  Used with: aggregate, coords, interval, end, geom
 
         Valid combinations:
             (coords),
-            (start, end, aggregate, geom),
+            (coords, start, end),
+            (coords, start, end, aggregate),
+            (coords, start, end, aggregate, interval),
+            (geom, start, end, aggregate)
+            (geom, start, end, aggregate, interval),
             (start, end, aggregate, interval),
             (start, end, aggregate),
  */
@@ -325,7 +329,7 @@ function t (req, res) {
         }
 
     ////////////////////////////////////////////////////////////////////////////
-    // T Data (Time Series) ////////////////////////////////////////////////////
+    // T Filtering in Space ////////////////////////////////////////////////////
 
     } else if (_.has(req.query, 'coords')) {
         coords = core.pointCoords(req.query.coords);
