@@ -164,25 +164,21 @@ Example output:
     
 ## Use Cases
 
-### Summary Statistics #########################################################
-
-    GET /flux/api/[scenario]/stats.json
-
 ### Getting a Map (XY Data) ####################################################
 
 #### Getting a Map at a Specified Time
 
-    GET /flux/api/[scenario]/xy.json?time=2004-05-01T03:00:00
+    GET xy.json?time=2004-05-01T03:00:00
 
 #### Aggregation in Time
 
 The `aggregate` keyword is used to specify the kind of aggregate data desired. Here is an example of aggregation in time; aggregating total positive flux over a specified period. The aggregation is performed "element-wise" stacking maps (as arrays) together so as to produce a value for each grid cell.
 
-    GET /flux/api/[scenario]/xy.json?start=2004-05-01T03:00:00&end=2004-06-01T03:00:00&aggregate=positive
+    GET xy.json?start=2004-05-01T03:00:00&end=2004-06-01T03:00:00&aggregate=positive
 
 And here is a map of net flux over a month for each grid cell:
 
-    GET /flux/api/[scenario]/xy.json?start=2004-05-01T03:00:00&end=2004-05-02T03:00:00&aggregate=net
+    GET xy.json?start=2004-05-01T03:00:00&end=2004-05-02T03:00:00&aggregate=net
 
 ### Getting a Time Series ######################################################
 
@@ -192,7 +188,7 @@ As with the XY endpoint, the `aggregate` keyword is used to specify the kind of 
 
 The `t.json` endpoint requires that a single value be generated for each time step. With spatiotemporal data, this means that either spatial filtering or spatial aggregation is required. **Spatial filtering produces one value for each time step by selecting only one value among several based on that value's spatial location.** The `coords` parameter will do just that by selecting one point in a model. Here's an example of how to obtain a Time Series at a specified point in a spatiotemporal collection of rasters:
 
-    GET /flux/api/[scenario]/t.json?coords=POINT(-50.5+69.5)
+    GET t.json?coords=POINT(-50.5+69.5)
 
 #### Aggregation in Space
 
@@ -209,39 +205,39 @@ The `t.json` endpoint requires that a single value be generated for each time st
 
 Here is an example of the mean value displayed for every time frame in the original dataset; it is presented at the same resolution as the non-aggregated data:
 
-    GET /flux/api/scenarios/[scenario]/t.json?start=2003-12-22T03:00:00&end=2005-01-01T00:00:00&aggregate=mean
+    GET t.json?start=2003-12-22T03:00:00&end=2005-01-01T00:00:00&aggregate=mean
 
 **Filtering and aggregation can be done simultaneously.** The `geom` parameter is used to select a subset of same-time values based on their spatial location; these values are then aggregated to a single value for the time step they share. In cases where the `interval` parameter is also used (see next section), the same aggregate (defined by `aggregate`) is used to aggregate in both time and space i.e. the aggregate of the spatially-filtered values and the aggregate of each aggregate thus generated. The value of the `geom` parameter is an arbitrary `POINT()` or `POLYGON()` WKT string that specifies the spatial extent of the data to select. Here's an example of a polygon selection that is further aggregated to the net value:
 
-    GET /flux/api/scenarios/[scenario]/t.json?geom=POLYGON(-50.5+69.5,-50.5+70,-50+70,-50+69.5,-50.5+69.5)&aggregate=net&start=2004-05-01&end=2004-06-01
+    GET t.json?aggregate=net&start=2004-05-01&end=2004-06-01&geom=POLYGON(-50.5+69.5,-50.5+70,-50+70,-50+69.5,-50.5+69.5)
     
 The `coords` parameter can also be used to filter data before aggregation.
 
-    GET /flux/api/scenarios/[scenario]/t.json?coords=POINT(-50.5+69.5)&aggregate=net&start=2004-05-01&end=2004-06-01
+    GET t.json?aggregate=net&start=2004-05-01&end=2004-06-01&coords=POINT(-50.5+69.5)
 
 #### Aggregation in Both Space and Time
 
 The `interval` parameter can be used to further aggregate in time. **It must be used with the `aggregate` parameter;** you have to specify how to downsample in time. If spatial filtering is also requested (with the `geom` parameter), then the specified aggregate is also applied over the spatial subset before being applied to each time step (e.g. the mean daily value of the means). Here is a time series of net daily flux across the entire dataset (in this case, net daily flux of North America) for each day of the month. 
 
-    GET /flux/api/scenarios/[scenario]/t.json?start=2003-12-22T03:00:00&end=2005-01-01T00:00:00&aggregate=mean&interval=daily
+    GET t.json?start=2003-12-22T03:00:00&end=2005-01-01T00:00:00&aggregate=mean&interval=daily
 
 ### Uncertainty Data: Covariance ###############################################
 
 To get a map of the covariances associated with a particular model cell, use the `covarianceAt` parameter:
 
-    GET /flux/api/[scenario]/uncertainty.json?time=2004-05&covarianceAt=POINT(-50.5 69.5)
+    GET uncertainty.json?time=2004-05&covarianceAt=POINT(-50.5 69.5)
 
 A time series of covariance data can be obtained by specifying the associated cells and a range of time:
 
-    GET /flux/api/[scenario]/uncertainty.json?start=2004-05&end=2004-06&source=POINT(-50.5 69.5)&target=POINT(-45.5 69.5)
+    GET uncertainty.json?start=2004-05&end=2004-06&source=POINT(-50.5 69.5)&target=POINT(-45.5 69.5)
 
 ### Uncertainty Data: Variance #################################################
 
 The variances can be obtained for specified timesteps with the `time` parameter:
 
-    GET /flux/api/[scenario]/uncertainty.json?time=2004-05
+    GET uncertainty.json?time=2004-05
 
 A time series of variances can be obtained by setting the `source` and `target` parameters to the same value (the same resolution cell):
 
-    GET /flux/api/[scenario]/uncertainty.json?start=2004-05&end=2004-06&source=POINT(-50.5 69.5)&target=POINT(-50.5 69.5)
+    GET uncertainty.json?start=2004-05&end=2004-06&source=POINT(-50.5 69.5)&target=POINT(-50.5 69.5)
 
