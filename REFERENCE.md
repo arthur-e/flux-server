@@ -62,7 +62,7 @@ Example output:
       "mean": -0.00713500735546471
     }
   },
-  "gridres": {
+  "grid": {
     "units": "degrees",
     "x": 1,
     "y": 1

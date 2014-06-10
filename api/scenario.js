@@ -13,7 +13,7 @@ function scenario (req, res) {
         } else {
             scns = [];
             _.each(core.SCENARIOS, function (name) {
-                scns.push(_.pick(core.METADATA[name], '_id', 'title'));
+                scns.push(_.pick(core.METADATA[name], '_id', 'title', 'gridded'));
             });
             return res.send(scns);
         }
