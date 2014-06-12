@@ -93,7 +93,10 @@ Example output (raster case):
 Example output (vector case):
 ```
 {
-  "timestamp": "2009-06-16",
+  "properties": {
+    "start": "2009-06-16T00:00:00",
+    "end": "2009-06-21T00:00:00"
+  },
   "features": [{
     "timestamp": "2009-06-16T00:00:00",
     "coordinates": [-175.488, -50.41476]
@@ -111,7 +114,6 @@ Example output, derivative of a GeoJSON `FeatureCollection`for the raster case, 
 
 ```
 {
-  "timestamp": "2003-12-22T03:00:00.000Z",
   "type": "FeatureCollection",
   "features": [{
     "type": "Point",

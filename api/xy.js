@@ -9,10 +9,11 @@ var _ = require('underscore');
         end             [Optional]  Used with: aggregate, start
         aggregate       [Optional]  Used with: start, end
 
-        Valid combinations: (time), (start, end, aggregate)
+        Valid combinations: (time), (start, end), (start, end, aggregate)
  */
 function xy (req, res) {
     var collection = core.DATA[req.params.scenario];
+    var metadata = core.METADATA[req.params.scenario];
     var verbose = (_.has(req.query, 'verbose'));
 
     if (collection === undefined) {
@@ -25,13 +26,19 @@ function xy (req, res) {
     // XY Data (Maps) //////////////////////////////////////////////////////////
 
     if (_.has(req.query, 'time')) {
-        var body, i;
+        var body, cursor, i;
         var argument = new Date(req.query.time); // Grab the date string from the query
 
-        // Fetch the data from mongo and construct the GeoJSON response
+        if (metadata.gridded) {
+            cursor = collection.find({'_id': argument}); // Gridded data uniquely indexed
+        } else {
+            cursor = collection.find({'timestamp': argument});
+        }
+
+        // Fetch the data from mongo and construct the JSON response
         // Note that the mongo find query can use the date object instead
         // of a constructed date string
-        collection.find({'_id': argument}).toArray(function (err, map) {
+        cursor.toArray(function (err, map) {
             if (err) return console.log(err);
 
             if (map.length === 0) {
@@ -74,13 +81,17 @@ function xy (req, res) {
             }
 
             // Send the response as a JSON object
-            res.send(body);
+            return res.send(body);
         });
 
     ////////////////////////////////////////////////////////////////////////////
     // XY Aggregation in Time (Maps) ///////////////////////////////////////////
 
     } else if (_.has(req.query, 'aggregate')) {
+
+        if (!metadata.gridded) { // Aggregating non-gridded data is not supported
+            return res.send(501, 'Not Implemented');
+        }
 
         if (!_.has(req.query, 'start') || !_.has(req.query, 'end')) {
             return res.send(400, 'Bad Request');
@@ -255,12 +266,44 @@ function xy (req, res) {
         // Invoke the aggregation pipeline with the arguments and callback function definition
         collection.aggregate.apply(collection, definition) // Updates "result" variable
 
+    ////////////////////////////////////////////////////////////////////////////
+    // XY Feature Collection ///////////////////////////////////////////////////
+    
+    } else if (_.has(req.query, 'start') && _.has(req.query, 'end')) {
+
+        if (metadata.gridded) {
+            return res.send(501, 'Not Implemented');
+        }
+
+        // start && end parameter constraints
+        if (!core.REGEX.iso8601.test(req.query.start) || !core.REGEX.iso8601.test(req.query.end)) {
+            return res.send(400, 'Bad Request');
+        }
+
+        collection.find({
+            '_id': {
+                '$gte': new Date(req.query.start),
+                '$lte': new Date(req.query.end)
+            }
+        }).toArray(function (err, features) {
+            var body;
+
+            if (err) return console.log(err);
+
+            if (features.length === 0) {
+                return res.send(404, 'Not Found');
+            }
+
+            return res.send({
+                'features': features
+            });
+
+        });
 
     } else {
         return res.send(400, 'Bad Request');
 
     }
-
 
 };
 

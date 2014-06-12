@@ -1,6 +1,6 @@
-var core                    = require('../core').core;
-var numeric                 = require('numeric');
-var _                       = require('underscore');
+var core = require('../core').core;
+var numeric = require('numeric');
+var _ = require('underscore');
 
 function scenario (req, res) {
     var scn = req.params.scenario || req.query.scenario;
