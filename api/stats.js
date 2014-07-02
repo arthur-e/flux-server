@@ -1,9 +1,7 @@
 var core                    = require('../core').core;
 var numeric                 = require('numeric');
-/**
-    Returns summary statistics about the given scenario (collection).
- */
 
+// Returns summary statistics about the given scenario (collection).
 function stats(req, res) {
   var collection = core.DATA['summary_stats'];
 

@@ -2,9 +2,7 @@ var core                    = require('../core').core;
 var numeric                 = require('numeric');
 var _                       = require('underscore');
 
-/**
-  Returns the model grid as a MultiPoint GeoJSON response.
- */
+// Returns the model grid as a MultiPoint GeoJSON response.
 function grid(req, res){
   
   if (!req.params.scenario) return res.send(400, 'Bad Request');
@@ -28,9 +26,7 @@ function grid(req, res){
 
 }
 
-/**
-  Returns the model grid as a GeometryCollection GeoJSON response.
- */
+// Returns the model grid as a GeometryCollection GeoJSON response.
 function geometryCollection(req, res){
   
   if(!req.params.scenario) return res.send(400, 'Bad Request');

@@ -1,0 +1,341 @@
+<!DOCTYPE html><html><head><title>t.js</title><meta http-equiv="Content-Type" content="text/html" charset="UTF-8"><link rel="stylesheet" media="all" href="../docco.css"></head><body><div id="container"><div id="background"></div><div id="jump_to">Jump To &hellip;<div id="jump_wrapper"><div id="jump_page"><a href="../index.html" class="source"><span class="file_name">README</span></a><a href=".././core.js.html" class="source "><span class="base_path">. / </span><span class="file_name">core.js</span></a><a href=".././flux-server.js.html" class="source "><span class="base_path">. / </span><span class="file_name">flux-server.js</span></a><a href="../api/grid.js.html" class="source "><span class="base_path">api / </span><span class="file_name">grid.js</span></a><a href="../api/scenario.js.html" class="source "><span class="base_path">api / </span><span class="file_name">scenario.js</span></a><a href="../api/stats.js.html" class="source "><span class="base_path">api / </span><span class="file_name">stats.js</span></a><a href="../api/t.js.html" class="source selected"><span class="base_path">api / </span><span class="file_name">t.js</span></a><a href="../api/uncertainty.js.html" class="source "><span class="base_path">api / </span><span class="file_name">uncertainty.js</span></a><a href="../api/xy.js.html" class="source "><span class="base_path">api / </span><span class="file_name">xy.js</span></a></div></div></div><table cellpadding="0" cellspacing="0"><thead><tr><th class="docs"><h1>t.js</h1><div class="filepath">api/</div></th><th class="code"></th></tr></thead><tbody><tr id="section-1"><td class="docs"><div class="pilwrap"><a href="#section-1" class="pilcrow">&#182;</a></div>
+</td><td class="code"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">core</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../core&#39;</span><span class="p">).</span><span class="nx">core</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">moment</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../node_modules/moment/moment&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">numeric</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;numeric&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">_</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;underscore&#39;</span><span class="p">);</span></pre></div></td></tr><tr id="section-2"><td class="docs"><div class="pilwrap"><a href="#section-2" class="pilcrow">&#182;</a></div><div class="dox"><div class="summary"><h2>GET Parameters</h2>
+
+<pre><code>    aggregate       [Optional]  Used with: coords, interval, start, end, geom
+    coords          [Optional]  Used with: aggregate, interval, start, end
+    end             [Optional]  Used with: aggregate, coords, interval, start, geom
+    geom            [Optional]  Used with: aggregate, coords, start, end
+    interval        [Optional]  Used with: aggregate, coords, start, end
+    start           [Optional]  Used with: aggregate, coords, interval, end, geom
+</code></pre></div><div class="body"><h2>Valid combinations</h2>
+
+<pre><code>        (coords),
+        (coords, start, end),
+        (coords, start, end, aggregate),
+        (coords, start, end, aggregate, interval),
+        (geom, start, end, aggregate)
+        (geom, start, end, aggregate, interval),
+        (start, end, aggregate, interval),
+        (start, end, aggregate),
+</code></pre></div></div>
+</td><td class="code"><div class="highlight"><pre><span class="kd">function</span> <span class="nx">t</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">body</span><span class="p">,</span> <span class="nx">coords</span><span class="p">,</span> <span class="nx">grouping</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">idx</span><span class="p">,</span> <span class="nx">projection</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">collection</span> <span class="o">=</span> <span class="nx">core</span><span class="p">.</span><span class="nx">DATA</span><span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">scenario</span><span class="p">];</span>
+    <span class="kd">var</span> <span class="nx">aggregate</span> <span class="o">=</span> <span class="p">{};</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">collection</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="s1">&#39;Not Found&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">,</span> <span class="s1">&#39;start&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;Bad Request&#39;</span><span class="p">);</span>
+    <span class="p">}</span></pre></div></td></tr><tr id="section-3"><td class="docs"><div class="pilwrap"><a href="#section-3" class="pilcrow">&#182;</a></div><p>start &amp;&amp; end parameter constraints</p>
+</td><td class="code"><div class="highlight"><pre>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">core</span><span class="p">.</span><span class="nx">REGEX</span><span class="p">.</span><span class="nx">iso8601</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">start</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="nx">core</span><span class="p">.</span><span class="nx">REGEX</span><span class="p">.</span><span class="nx">iso8601</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">end</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;Bad Request&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nx">numeric</span><span class="p">.</span><span class="nx">precision</span> <span class="o">=</span> <span class="nx">core</span><span class="p">.</span><span class="nx">PRECISION</span><span class="p">;</span></pre></div></td></tr><tr id="section-4"><td class="docs"><div class="pilwrap"><a href="#section-4" class="pilcrow">&#182;</a></div><p>//////////////////////////////////////////////////////////////////////////
+T Aggregation in Space or Time //////////////////////////////////////////</p>
+</td><td class="code"><div class="highlight"><pre>    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">,</span> <span class="s1">&#39;aggregate&#39;</span><span class="p">))</span> <span class="p">{</span></pre></div></td></tr><tr id="section-5"><td class="docs"><div class="pilwrap"><a href="#section-5" class="pilcrow">&#182;</a></div><p>aggregate parameter constraints</p>
+</td><td class="code"><div class="highlight"><pre>        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">([</span><span class="s1">&#39;positive&#39;</span><span class="p">,</span> <span class="s1">&#39;negative&#39;</span><span class="p">,</span> <span class="s1">&#39;net&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">],</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;Bad Request&#39;</span><span class="p">);</span>
+        <span class="p">}</span></pre></div></td></tr><tr id="section-6"><td class="docs"><div class="pilwrap"><a href="#section-6" class="pilcrow">&#182;</a></div><p>geom ////////////////////////////////////////////////////////////////</p>
+</td><td class="code"><div class="highlight"><pre>        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">,</span> <span class="s1">&#39;geom&#39;</span><span class="p">))</span> <span class="p">{</span>
+
+            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">501</span><span class="p">,</span> <span class="s1">&#39;Not Implemented&#39;</span><span class="p">);</span> <span class="c1">//TODO</span></pre></div></td></tr><tr id="section-7"><td class="docs"><div class="pilwrap"><a href="#section-7" class="pilcrow">&#182;</a></div><p>coords //////////////////////////////////////////////////////////////</p>
+</td><td class="code"><div class="highlight"><pre>        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">,</span> <span class="s1">&#39;coords&#39;</span><span class="p">))</span> <span class="p">{</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">,</span> <span class="s1">&#39;interval&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;Bad Request&#39;</span><span class="p">);</span>
+            <span class="p">}</span></pre></div></td></tr><tr id="section-8"><td class="docs"><div class="pilwrap"><a href="#section-8" class="pilcrow">&#182;</a></div><p>interval parameter constraints</p>
+</td><td class="code"><div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">([</span><span class="s1">&#39;daily&#39;</span><span class="p">,</span> <span class="s1">&#39;monthly&#39;</span><span class="p">,</span> <span class="s1">&#39;annual&#39;</span><span class="p">],</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">interval</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;Bad Request&#39;</span><span class="p">);</span>
+            <span class="p">}</span></pre></div></td></tr><tr id="section-9"><td class="docs"><div class="pilwrap"><a href="#section-9" class="pilcrow">&#182;</a></div><p>Get the integer value of the cell index</p>
+</td><td class="code"><div class="highlight"><pre>            <span class="nx">coords</span> <span class="o">=</span> <span class="nx">core</span><span class="p">.</span><span class="nx">pointCoords</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">coords</span><span class="p">);</span>
+            <span class="nx">idx</span> <span class="o">=</span> <span class="nx">core</span><span class="p">.</span><span class="nx">getCellIndex</span><span class="p">(</span><span class="nx">coords</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">scenario</span><span class="p">);</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">idx</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;Bad Request&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="nx">collection</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span>
+                <span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="p">{</span>
+                    <span class="s1">&#39;$gte&#39;</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">start</span><span class="p">),</span>
+                    <span class="s1">&#39;$lte&#39;</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">end</span><span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">}).</span><span class="nx">toArray</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">docs</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="nx">j</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="kd">var</span> <span class="nx">unit</span><span class="p">,</span> <span class="nx">t1</span><span class="p">;</span>
+                <span class="kd">var</span> <span class="nx">t0</span> <span class="o">=</span> <span class="nx">moment</span><span class="p">.</span><span class="nx">utc</span><span class="p">(</span><span class="nx">docs</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">_id</span><span class="p">);</span>
+                <span class="kd">var</span> <span class="nx">ds</span> <span class="o">=</span> <span class="p">[];</span>
+                <span class="kd">var</span> <span class="nx">operation</span><span class="p">,</span> <span class="nx">subop</span><span class="p">;</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+
+                <span class="k">switch</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">case</span> <span class="s1">&#39;positive&#39;</span><span class="o">:</span>
+                    <span class="nx">subop</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">s</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">s</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">v</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="p">(</span><span class="nx">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="nx">memo</span> <span class="o">+</span> <span class="nx">v</span> <span class="o">:</span> <span class="nx">memo</span><span class="p">;</span>
+                        <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
+                    <span class="p">};</span>
+                    <span class="k">break</span><span class="p">;</span>
+
+                    <span class="k">case</span> <span class="s1">&#39;negative&#39;</span><span class="o">:</span>
+                    <span class="nx">subop</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">s</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">s</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">v</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="p">(</span><span class="nx">v</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="nx">memo</span> <span class="o">+</span> <span class="nx">v</span> <span class="o">:</span> <span class="nx">memo</span><span class="p">;</span>
+                        <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
+                    <span class="p">};</span>
+                    <span class="k">break</span><span class="p">;</span>
+
+                    <span class="k">case</span> <span class="s1">&#39;net&#39;</span><span class="o">:</span>
+                    <span class="nx">subop</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">s</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">s</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">v</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="nx">memo</span> <span class="o">+</span> <span class="nx">v</span><span class="p">;</span>
+                        <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
+                    <span class="p">};</span>
+                    <span class="k">break</span><span class="p">;</span>
+
+                    <span class="k">case</span> <span class="s1">&#39;mean&#39;</span><span class="o">:</span>
+                    <span class="nx">subop</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">s</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">s</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">v</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="p">(</span><span class="nx">memo</span> <span class="o">+</span> <span class="nx">v</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">;</span>
+                        <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
+                    <span class="p">};</span>
+                    <span class="k">break</span><span class="p">;</span>
+
+                    <span class="k">case</span> <span class="s1">&#39;min&#39;</span><span class="o">:</span>
+                    <span class="nx">subop</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">min</span><span class="p">;</span>
+                    <span class="k">break</span><span class="p">;</span>
+
+                    <span class="k">case</span> <span class="s1">&#39;max&#39;</span><span class="o">:</span>
+                    <span class="nx">subop</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">max</span><span class="p">;</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="k">switch</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">interval</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">case</span> <span class="s1">&#39;hourly&#39;</span><span class="o">:</span>
+                    <span class="nx">unit</span> <span class="o">=</span> <span class="s1">&#39;hour&#39;</span><span class="p">;</span>
+                    <span class="k">break</span><span class="p">;</span>
+
+                    <span class="k">case</span> <span class="s1">&#39;daily&#39;</span><span class="o">:</span>
+                    <span class="nx">unit</span> <span class="o">=</span> <span class="s1">&#39;day&#39;</span><span class="p">;</span>
+                    <span class="k">break</span><span class="p">;</span>
+
+                    <span class="k">case</span> <span class="s1">&#39;monthly&#39;</span><span class="o">:</span>
+                    <span class="nx">unit</span> <span class="o">=</span> <span class="s1">&#39;month&#39;</span><span class="p">;</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="nx">operation</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">series</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">subop</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">series</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">serie</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">serie</span><span class="p">.</span><span class="nx">values</span><span class="p">[</span><span class="nx">idx</span><span class="p">];</span>
+                    <span class="p">}));</span>
+                <span class="p">};</span>
+
+                <span class="nx">t1</span> <span class="o">=</span> <span class="nx">t0</span><span class="p">.</span><span class="nx">clone</span><span class="p">().</span><span class="nx">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">unit</span><span class="p">);</span>
+                <span class="k">while</span> <span class="p">(</span><span class="nx">j</span> <span class="o">&lt;</span> <span class="nx">docs</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">moment</span><span class="p">.</span><span class="nx">utc</span><span class="p">(</span><span class="nx">docs</span><span class="p">[</span><span class="nx">j</span><span class="p">].</span><span class="nx">_id</span><span class="p">).</span><span class="nx">isSame</span><span class="p">(</span><span class="nx">t1</span><span class="p">)</span> <span class="o">||</span> <span class="nx">moment</span><span class="p">.</span><span class="nx">utc</span><span class="p">(</span><span class="nx">docs</span><span class="p">[</span><span class="nx">j</span><span class="p">].</span><span class="nx">_id</span><span class="p">).</span><span class="nx">isAfter</span><span class="p">(</span><span class="nx">t1</span><span class="p">))</span> <span class="p">{</span></pre></div></td></tr><tr id="section-10"><td class="docs"><div class="pilwrap"><a href="#section-10" class="pilcrow">&#182;</a></div><p>Call the operation on the subsequence of data from the last
+ time point to the current</p>
+</td><td class="code"><div class="highlight"><pre>                        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">moment</span><span class="p">.</span><span class="nx">utc</span><span class="p">(</span><span class="nx">docs</span><span class="p">[</span><span class="nx">j</span><span class="p">].</span><span class="nx">_id</span><span class="p">).</span><span class="nx">isSame</span><span class="p">(</span><span class="nx">t1</span><span class="p">))</span> <span class="p">{</span>
+                            <span class="nx">ds</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">operation</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">docs</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">j</span><span class="p">)));</span>
+                        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                            <span class="nx">ds</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">operation</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">docs</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)));</span>
+                        <span class="p">}</span></pre></div></td></tr><tr id="section-11"><td class="docs"><div class="pilwrap"><a href="#section-11" class="pilcrow">&#182;</a></div><p>Update the forward-looking timestamp</p>
+</td><td class="code"><div class="highlight"><pre>                        <span class="nx">t1</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">unit</span><span class="p">);</span>
+                        <span class="nx">i</span> <span class="o">=</span> <span class="nx">j</span><span class="p">;</span>
+                    <span class="p">}</span>
+
+                    <span class="nx">j</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+                    <span class="nx">properties</span><span class="o">:</span> <span class="p">{</span>
+                        <span class="nx">aggregate</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">,</span>
+                        <span class="nx">interval</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">interval</span><span class="p">,</span>
+                        <span class="nx">start</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">start</span><span class="p">,</span>
+                        <span class="nx">end</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">end</span><span class="p">,</span>
+                        <span class="nx">coords</span><span class="o">:</span> <span class="s1">&#39;POINT(&#39;</span> <span class="o">+</span> <span class="nx">coords</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+                    <span class="p">},</span>
+                    <span class="nx">series</span><span class="o">:</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">ds</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">toFixed</span><span class="p">(</span><span class="nx">core</span><span class="p">.</span><span class="nx">PRECISION</span><span class="p">));</span>
+                    <span class="p">})</span>
+                <span class="p">});</span>
+
+            <span class="p">});</span></pre></div></td></tr><tr id="section-12"><td class="docs"><div class="pilwrap"><a href="#section-12" class="pilcrow">&#182;</a></div><p>interval? &amp;&amp; start &amp;&amp; end &amp;&amp; aggregate //////////////////////////////</p>
+</td><td class="code"><div class="highlight"><pre>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">,</span> <span class="s1">&#39;interval&#39;</span><span class="p">))</span> <span class="p">{</span></pre></div></td></tr><tr id="section-13"><td class="docs"><div class="pilwrap"><a href="#section-13" class="pilcrow">&#182;</a></div><p>interval parameter constraints</p>
+</td><td class="code"><div class="highlight"><pre>                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">([</span><span class="s1">&#39;daily&#39;</span><span class="p">,</span> <span class="s1">&#39;monthly&#39;</span><span class="p">,</span> <span class="s1">&#39;annual&#39;</span><span class="p">],</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">interval</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;Bad Request&#39;</span><span class="p">);</span>
+                <span class="p">}</span>
+
+                <span class="nx">projection</span> <span class="o">=</span> <span class="nx">core</span><span class="p">.</span><span class="nx">INTERVALS</span><span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">interval</span><span class="p">];</span>
+                <span class="nx">grouping</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;year&#39;</span><span class="o">:</span> <span class="s1">&#39;$year&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;month&#39;</span><span class="o">:</span> <span class="s1">&#39;$month&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;day&#39;</span><span class="o">:</span> <span class="s1">&#39;$day&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;hour&#39;</span><span class="o">:</span> <span class="s1">&#39;$hour&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;minute&#39;</span><span class="o">:</span> <span class="s1">&#39;$minute&#39;</span>
+                <span class="p">};</span>
+
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span></pre></div></td></tr><tr id="section-14"><td class="docs"><div class="pilwrap"><a href="#section-14" class="pilcrow">&#182;</a></div><p>Default to the temporal resolution of the data (no temporal
+ aggregation)</p>
+</td><td class="code"><div class="highlight"><pre>                <span class="nx">projection</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="s1">&#39;$_id&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;values&#39;</span><span class="o">:</span> <span class="s1">&#39;$values&#39;</span>
+                <span class="p">};</span>
+                <span class="nx">grouping</span> <span class="o">=</span> <span class="s1">&#39;$_id&#39;</span><span class="p">;</span>
+            <span class="p">}</span></pre></div></td></tr><tr id="section-15"><td class="docs"><div class="pilwrap"><a href="#section-15" class="pilcrow">&#182;</a></div><p>positive || negative ////////////////////////////////////////////</p>
+</td><td class="code"><div class="highlight"><pre>            <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">([</span><span class="s1">&#39;positive&#39;</span><span class="p">,</span> <span class="s1">&#39;negative&#39;</span><span class="p">],</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">))</span> <span class="p">{</span></pre></div></td></tr><tr id="section-16"><td class="docs"><div class="pilwrap"><a href="#section-16" class="pilcrow">&#182;</a></div><p>Creates object aggregate e.g. {'$gte': 0}</p>
+</td><td class="code"><div class="highlight"><pre>                <span class="nb">Object</span><span class="p">.</span><span class="nx">defineProperty</span><span class="p">(</span><span class="nx">aggregate</span><span class="p">,</span> <span class="nx">core</span><span class="p">.</span><span class="nx">AGGREGATES</span><span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">],</span> <span class="p">{</span>
+                    <span class="nx">enumerable</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+                    <span class="nx">value</span><span class="o">:</span> <span class="mi">0</span>
+                <span class="p">});</span></pre></div></td></tr><tr id="section-17"><td class="docs"><div class="pilwrap"><a href="#section-17" class="pilcrow">&#182;</a></div><p>New implementation using the aggregation framework.
+ Response time averages around 4.3 seconds. </p>
+</td><td class="code"><div class="highlight"><pre>                <span class="nx">collection</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">({</span>
+                    <span class="s1">&#39;$match&#39;</span><span class="o">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="p">{</span>
+                            <span class="nx">$gte</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">start</span><span class="p">),</span>
+                            <span class="nx">$lte</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">end</span><span class="p">)</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+                <span class="p">},</span> <span class="p">{</span>
+                    <span class="s1">&#39;$project&#39;</span><span class="o">:</span> <span class="nx">projection</span>
+                <span class="p">},</span> <span class="p">{</span>
+                    <span class="s1">&#39;$unwind&#39;</span><span class="o">:</span> <span class="s1">&#39;$values&#39;</span>
+                <span class="p">},</span> <span class="p">{</span>
+                    <span class="s1">&#39;$match&#39;</span><span class="o">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;values&#39;</span><span class="o">:</span> <span class="nx">aggregate</span>
+                    <span class="p">}</span>
+                <span class="p">},</span> <span class="p">{</span>
+                    <span class="s1">&#39;$group&#39;</span><span class="o">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="nx">grouping</span><span class="p">,</span>
+                        <span class="s1">&#39;values&#39;</span><span class="o">:</span> <span class="p">{</span> <span class="s1">&#39;$sum&#39;</span><span class="o">:</span> <span class="s1">&#39;$values&#39;</span> <span class="p">}</span>
+                    <span class="p">}</span>
+                <span class="p">},</span> <span class="p">{</span>
+                    <span class="s1">&#39;$sort&#39;</span><span class="o">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="mi">1</span>
+                    <span class="p">}</span>
+                <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">code</span> <span class="o">===</span> <span class="mi">16389</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">413</span><span class="p">,</span> <span class="s1">&#39;Request Entity Too Large&#39;</span><span class="p">);</span>
+                        <span class="p">}</span>
+
+                        <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+                    <span class="p">}</span>
+
+                    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+                        <span class="nx">properties</span><span class="o">:</span> <span class="p">{</span>
+                            <span class="nx">aggregate</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">,</span>
+                            <span class="nx">interval</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">interval</span><span class="p">,</span>
+                            <span class="nx">start</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">start</span><span class="p">,</span>
+                            <span class="nx">end</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">end</span>
+                        <span class="p">},</span>
+                        <span class="nx">series</span><span class="o">:</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">results</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">doc</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">doc</span><span class="p">.</span><span class="nx">values</span><span class="p">.</span><span class="nx">toFixed</span><span class="p">(</span><span class="nx">core</span><span class="p">.</span><span class="nx">PRECISION</span><span class="p">));</span>
+                        <span class="p">})</span>
+                    <span class="p">});</span>
+                <span class="p">});</span></pre></div></td></tr><tr id="section-18"><td class="docs"><div class="pilwrap"><a href="#section-18" class="pilcrow">&#182;</a></div><p>net || mean || min || max ///////////////////////////////////////</p>
+</td><td class="code"><div class="highlight"><pre>            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span></pre></div></td></tr><tr id="section-19"><td class="docs"><div class="pilwrap"><a href="#section-19" class="pilcrow">&#182;</a></div><p>Creates object aggregate e.g. {'$sum': '$values'}</p>
+</td><td class="code"><div class="highlight"><pre>                <span class="nb">Object</span><span class="p">.</span><span class="nx">defineProperty</span><span class="p">(</span><span class="nx">aggregate</span><span class="p">,</span> <span class="nx">core</span><span class="p">.</span><span class="nx">AGGREGATES</span><span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">],</span> <span class="p">{</span>
+                    <span class="nx">enumerable</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+                    <span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;$values&#39;</span>
+                <span class="p">});</span>
+
+                <span class="nx">collection</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">({</span>
+                    <span class="s1">&#39;$match&#39;</span><span class="o">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="p">{</span>
+                            <span class="s1">&#39;$gte&#39;</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">start</span><span class="p">),</span>
+                            <span class="s1">&#39;$lte&#39;</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">end</span><span class="p">)</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+                <span class="p">},</span> <span class="p">{</span>
+                    <span class="s1">&#39;$project&#39;</span><span class="o">:</span> <span class="nx">projection</span>
+                <span class="p">},</span> <span class="p">{</span>
+                    <span class="s1">&#39;$unwind&#39;</span><span class="o">:</span> <span class="s1">&#39;$values&#39;</span>
+                <span class="p">},</span> <span class="p">{</span>
+                    <span class="s1">&#39;$group&#39;</span><span class="o">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="nx">grouping</span><span class="p">,</span>
+                        <span class="s1">&#39;values&#39;</span><span class="o">:</span> <span class="nx">aggregate</span>
+                    <span class="p">}</span>
+                <span class="p">},</span> <span class="p">{</span>
+                    <span class="s1">&#39;$sort&#39;</span><span class="o">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="mi">1</span>
+                    <span class="p">}</span>
+                <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">code</span> <span class="o">===</span> <span class="mi">16389</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">413</span><span class="p">,</span> <span class="s1">&#39;Request Entity Too Large&#39;</span><span class="p">);</span>
+                        <span class="p">}</span>
+
+                        <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+                    <span class="p">}</span>
+
+                    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+                        <span class="nx">properties</span><span class="o">:</span> <span class="p">{</span>
+                            <span class="nx">aggregate</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">,</span>
+                            <span class="nx">interval</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">interval</span><span class="p">,</span>
+                            <span class="nx">start</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">start</span><span class="p">,</span>
+                            <span class="nx">end</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">end</span>
+                        <span class="p">},</span>
+                        <span class="nx">series</span><span class="o">:</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">results</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">doc</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">doc</span><span class="p">.</span><span class="nx">values</span><span class="p">.</span><span class="nx">toFixed</span><span class="p">(</span><span class="nx">core</span><span class="p">.</span><span class="nx">PRECISION</span><span class="p">));</span>
+                        <span class="p">})</span>
+                    <span class="p">});</span>
+                <span class="p">});</span>
+
+            <span class="p">}</span>
+
+        <span class="p">}</span></pre></div></td></tr><tr id="section-20"><td class="docs"><div class="pilwrap"><a href="#section-20" class="pilcrow">&#182;</a></div><p>//////////////////////////////////////////////////////////////////////////
+T Filtering in Space ////////////////////////////////////////////////////</p>
+</td><td class="code"><div class="highlight"><pre>    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">,</span> <span class="s1">&#39;coords&#39;</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">coords</span> <span class="o">=</span> <span class="nx">core</span><span class="p">.</span><span class="nx">pointCoords</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">coords</span><span class="p">);</span>
+        <span class="nx">idx</span> <span class="o">=</span> <span class="nx">core</span><span class="p">.</span><span class="nx">getCellIndex</span><span class="p">(</span><span class="nx">coords</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">scenario</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">idx</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="s1">&#39;Not Found&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="nx">collection</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span>
+            <span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="p">{</span>
+                <span class="s1">&#39;$gte&#39;</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">start</span><span class="p">),</span>
+                <span class="s1">&#39;$lte&#39;</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">end</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">}).</span><span class="nx">sort</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="mi">1</span><span class="p">}).</span><span class="nx">toArray</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">items</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">items</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="s1">&#39;Not Found&#39;</span><span class="p">);</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">items</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;values&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="s1">&#39;Not Found&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">series</span><span class="o">:</span> <span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">v</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">v</span><span class="p">.</span><span class="nx">values</span><span class="p">[</span><span class="nx">idx</span><span class="p">].</span><span class="nx">toFixed</span><span class="p">(</span><span class="nx">core</span><span class="p">.</span><span class="nx">PRECISION</span><span class="p">));</span>
+                <span class="p">}),</span>
+                <span class="nx">properties</span><span class="o">:</span> <span class="p">{</span>
+                    <span class="nx">start</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">start</span><span class="p">,</span>
+                    <span class="nx">end</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">end</span><span class="p">,</span>
+                    <span class="nx">coords</span><span class="o">:</span> <span class="nx">coords</span>
+                <span class="p">}</span>
+            <span class="p">}</span></pre></div></td></tr><tr id="section-21"><td class="docs"><div class="pilwrap"><a href="#section-21" class="pilcrow">&#182;</a></div><p>Send the response as a json object</p>
+</td><td class="code"><div class="highlight"><pre>            <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+        <span class="p">});</span>
+
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;Bad Request&#39;</span><span class="p">);</span>
+
+    <span class="p">}</span>
+
+<span class="p">};</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">t</span> <span class="o">=</span> <span class="nx">t</span><span class="p">;</span>
+
+</pre></div></td></tr></tbody></table><div id="generated">generated Wed Jul 02 2014 12:32:31 GMT-0400 (EDT)  </div></div></body></html>

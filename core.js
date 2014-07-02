@@ -42,7 +42,7 @@ var core = {
     init: function (app) {
         var self = this;
 
-        // See discussion on this design pattern: https://groups.google.com/forum/#!msg/node-mongodb-native/mSGnnuG8C1o/Hiaqvdu1bWoJ
+        // [See discussion](https://groups.google.com/forum/#!msg/node-mongodb-native/mSGnnuG8C1o/Hiaqvdu1bWoJ) on this design pattern.
         mongo.connect('mongodb://localhost:27017/fluxvis', function (err, db) {
             var body = null;
             if (err) {
@@ -98,11 +98,11 @@ var core = {
 
     },
 
-    /**
-        Given a WKT Point string, extracts and returns the coordinates.
-        @param  wktPointString  {String}    e.g. "POINT(-83 42)"
-        @return                 {Number}    The index of the model resolution cell
-     */
+    //  Given a WKT Point string, extracts and returns the coordinates:
+    //
+    //     @param  wktPointString  {String}  e.g. "POINT(-83 42)"
+    //     @return                 {Number}  The index of the model resolution cell
+    
     pointCoords: function (wktPointString) {
         if (REGEX.wktPoint.test(wktPointString)) {
             return (function () {
@@ -114,11 +114,11 @@ var core = {
 
     },
 
-    /**
-        Extracts and formats a keyword representation of a time unit from a String.
-        @param  timeString  {String}
-        @return             {Number || String}
-     */
+    // Extracts and formats a keyword representation of a time unit from a String:
+    // 
+    //     @param  timeString  {String}
+    //     @return             {Number || String}
+ 
     uncertaintyTime: function (timeString) {
         // As of this time, only monthly and annual (yearly) uncertainties are available
         if (REGEX.monthly.test(timeString)) {
@@ -132,13 +132,13 @@ var core = {
 
     },
 
-    /**
-        Given point coordinates, looks up the index of the corresponding resolution
-        cell's coordinates.
-        @param  coords  {Array}     e.g. [-83, 42]
-        @param  scn     {String}    e.g. "zerozero_orch_shortaft_10twr"
-        @return         {Number}    The index of the model resolution cell
-     */
+    // Given point coordinates, looks up the index of the corresponding resolution
+    // cell's coordinates.
+    //
+    //     @param  coords  {Array}     e.g. [-83, 42]
+    //     @param  scn     {String}    e.g. "zerozero_orch_shortaft_10twr"
+    //     @return         {Number}    The index of the model resolution cell
+    
     getCellIndex: function (coords, scn) {
         var i, idx;
 

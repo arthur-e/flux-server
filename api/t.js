@@ -3,25 +3,24 @@ var moment = require('../node_modules/moment/moment');
 var numeric = require('numeric');
 var _ = require('underscore');
 
-/**
-    GET Parameters:
-        aggregate       [Optional]  Used with: coords, interval, start, end, geom
-        coords          [Optional]  Used with: aggregate, interval, start, end
-        end             [Optional]  Used with: aggregate, coords, interval, start, geom
-        geom            [Optional]  Used with: aggregate, coords, start, end
-        interval        [Optional]  Used with: aggregate, coords, start, end
-        start           [Optional]  Used with: aggregate, coords, interval, end, geom
-
-        Valid combinations:
-            (coords),
-            (coords, start, end),
-            (coords, start, end, aggregate),
-            (coords, start, end, aggregate, interval),
-            (geom, start, end, aggregate)
-            (geom, start, end, aggregate, interval),
-            (start, end, aggregate, interval),
-            (start, end, aggregate),
- */
+// GET Parameters:
+//
+//     aggregate   [Optional]  Used with: coords, interval, start, end, geom
+//     coords      [Optional]  Used with: aggregate, interval, start, end
+//     end         [Optional]  Used with: aggregate, coords, interval, start, geom
+//     geom        [Optional]  Used with: aggregate, coords, start, end
+//     interval    [Optional]  Used with: aggregate, coords, start, end
+//     start       [Optional]  Used with: aggregate, coords, interval, end, geom
+//
+//     Valid combinations:
+//       (coords),
+//       (coords, start, end),
+//       (coords, start, end, aggregate),
+//       (coords, start, end, aggregate, interval),
+//       (geom, start, end, aggregate)
+//       (geom, start, end, aggregate, interval),
+//       (start, end, aggregate, interval),
+//       (start, end, aggregate),
 
 function t (req, res) {
     var body, coords, grouping, i, idx, projection;
@@ -43,8 +42,8 @@ function t (req, res) {
 
     numeric.precision = core.PRECISION;
 
-    ////////////////////////////////////////////////////////////////////////////
-    // T Aggregation in Space or Time //////////////////////////////////////////
+    // T Aggregation in Space or Time
+    // ------------------------------
 
     if (_.has(req.query, 'aggregate')) {
 
@@ -53,12 +52,12 @@ function t (req, res) {
             return res.send(400, 'Bad Request');
         }
 
-        // geom ////////////////////////////////////////////////////////////////
+        // geom
         if (_.has(req.query, 'geom')) {
 
             return res.send(501, 'Not Implemented'); //TODO
 
-        // coords //////////////////////////////////////////////////////////////
+        // coords
         } else if (_.has(req.query, 'coords')) {
 
             if (!_.has(req.query, 'interval')) {
@@ -188,7 +187,7 @@ function t (req, res) {
 
             });
 
-        // interval? && start && end && aggregate //////////////////////////////
+        // interval? && start && end && aggregate
         } else {
 
             if (_.has(req.query, 'interval')) {
@@ -216,7 +215,7 @@ function t (req, res) {
                 grouping = '$_id';
             }
 
-            // positive || negative ////////////////////////////////////////////
+            // positive || negative
             if (_.contains(['positive', 'negative'], req.query.aggregate)) {
 
                 // Creates object aggregate e.g. {'$gte': 0}
@@ -273,7 +272,7 @@ function t (req, res) {
                     });
                 });
 
-            // net || mean || min || max ///////////////////////////////////////
+            // net || mean || min || max
             } else {
 
                 // Creates object aggregate e.g. {'$sum': '$values'}
@@ -328,8 +327,8 @@ function t (req, res) {
 
         }
 
-    ////////////////////////////////////////////////////////////////////////////
-    // T Filtering in Space ////////////////////////////////////////////////////
+    // T Filtering in Space
+    // --------------------
 
     } else if (_.has(req.query, 'coords')) {
         coords = core.pointCoords(req.query.coords);

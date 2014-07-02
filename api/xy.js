@@ -2,15 +2,18 @@ var core = require('../core').core;
 var numeric = require('numeric');
 var _ = require('underscore');
 
-/**
-    GET Parameters:
-        time            [Optional]  Used with: [None]
-        start           [Optional]  Used with: aggregate, end
-        end             [Optional]  Used with: aggregate, start
-        aggregate       [Optional]  Used with: start, end
+// GET Parameters:
+//
+//     time        [Optional]  Used with: [None]
+//     start       [Optional]  Used with: aggregate, end
+//     end         [Optional]  Used with: aggregate, start
+//     aggregate   [Optional]  Used with: start, end
+//
+//     Valid combinations:
+//         (time),
+//         (start, end),
+//         (start, end, aggregate)
 
-        Valid combinations: (time), (start, end), (start, end, aggregate)
- */
 function xy (req, res) {
     var collection = core.DATA[req.params.scenario];
     var metadata = core.METADATA[req.params.scenario];
@@ -22,8 +25,8 @@ function xy (req, res) {
     
     numeric.precision = core.PRECISION;
 
-    ////////////////////////////////////////////////////////////////////////////
-    // XY Data (Maps) //////////////////////////////////////////////////////////
+    // XY Data (Maps)
+    // --------------
 
     if (_.has(req.query, 'time')) {
         var body, cursor, i;
@@ -84,8 +87,8 @@ function xy (req, res) {
             return res.send(body);
         });
 
-    ////////////////////////////////////////////////////////////////////////////
-    // XY Aggregation in Time (Maps) ///////////////////////////////////////////
+    // XY Aggregation in Time (Maps)
+    // -----------------------------
 
     } else if (_.has(req.query, 'aggregate')) {
 
@@ -139,7 +142,8 @@ function xy (req, res) {
             i += 1;
         }
 
-        // min || max //////////////////////////////////////////////////////////
+        // min || max
+        // ----------
         if (_.contains(['min', 'max'], req.query.aggregate)) {
 
             // Add the callback function to the argument list for the aggregate() pipeline
@@ -190,7 +194,8 @@ function xy (req, res) {
 
             });
 
-        // mean || net || positive || negative /////////////////////////////////
+        // mean || net || positive || negative
+	// -----------------------------------
         } else if (_.contains(['mean', 'net', 'positive', 'negative'], req.query.aggregate)) {
 
             // Add the callback function to the argument list for the aggregate() pipeline
@@ -266,8 +271,9 @@ function xy (req, res) {
         // Invoke the aggregation pipeline with the arguments and callback function definition
         collection.aggregate.apply(collection, definition) // Updates "result" variable
 
-    ////////////////////////////////////////////////////////////////////////////
-    // XY Feature Collection ///////////////////////////////////////////////////
+	
+    // XY Feature Collection
+    // ---------------------
     
     } else if (_.has(req.query, 'start') && _.has(req.query, 'end')) {
 
