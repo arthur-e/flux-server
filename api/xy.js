@@ -44,7 +44,7 @@ function xy (req, res) {
         cursor.toArray(function (err, map) {
             if (err) return console.log(err);
 
-            if (map.length === 0) {
+            if (map.length === 0 || !_.isArray(map[0].values)) {
                 return res.send(404, 'Not Found');
             }
 
@@ -277,6 +277,7 @@ function xy (req, res) {
     
     } else if (_.has(req.query, 'start') && _.has(req.query, 'end')) {
 
+        // Returning more than a single time step not supported for gridded data
         if (metadata.gridded) {
             return res.send(501, 'Not Implemented');
         }
@@ -287,11 +288,11 @@ function xy (req, res) {
         }
 
         collection.find({
-            '_id': {
+            'timestamp': {
                 '$gte': new Date(req.query.start),
                 '$lte': new Date(req.query.end)
             }
-        }).toArray(function (err, features) {
+        }, {'_id': 0}).toArray(function (err, features) {
             var body;
 
             if (err) return console.log(err);
