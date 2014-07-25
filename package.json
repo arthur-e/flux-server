@@ -16,13 +16,15 @@
     "queue": "git://github.com/mbostock/queue"
   },
   "devDependencies": {
-    "jasmine-node": "latest"
+    "jasmine-node": "latest",
+    "uglify-js": "latest"
   },
   "repository": {
     "type": "git",
     "url": "git@github.com:arthur-e/flux-server.git"
   },
   "scripts": {
-    "preinstall": "sudo npm install forever -g;"
+    "preinstall": "sudo npm install forever -g;",
+    "postinstall": "./node_modules/uglify-js/bin/uglifyjs ./node_modules/moment/moment.js -o ./node_modules/moment/moment.min.js;./node_modules/uglify-js/bin/uglifyjs ./node_modules/topojson/topojson.js -o ./node_modules/topojson/topojson.min.js"
   }
 }
