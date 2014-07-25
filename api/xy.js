@@ -301,9 +301,31 @@ function xy (req, res) {
                 return res.send(404, 'Not Found');
             }
 
-            return res.send({
-                'features': features
-            });
+            if (verbose) {
+                // Emit a GeoJSON-compliant FeatureCollection instead
+
+                return res.send({
+                    'type': 'FeatureCollection',
+                    'features': _.map(features, function (feature) {
+                        return {
+                            'type': 'Feature',
+                            'properties': _.extend({
+                                'timestamp': feature.timestamp
+                            }, feature.properties),
+                            'geometry': {
+                                'type': 'Point',
+                                'coordinates': feature.coordinates
+                            }
+                        };
+                    })
+                });
+
+             } else {
+                return res.send({
+                    'features': features
+                });
+
+            }
 
         });
 
