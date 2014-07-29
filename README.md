@@ -48,6 +48,18 @@ Issue the following command to install the latest stable version of MongoDB:
 
     $ sudo apt-get install mongodb-10gen
 
+#################
+# Documentation #
+#################
+
+Documentation can be generated with docco. To install docco:
+
+    sudo npm install docco -g
+
+To generate the documentation:
+
+    docco -l classic ./*.js ./api/*.js
+
 ##############
 # Deployment #
 ##############
