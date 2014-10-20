@@ -16,6 +16,7 @@ var t         = require('./api/t.js').t;
 var stats     = require('./api/stats.js').stats;
 var scenarios = require('./api/scenario.js').scenario;
 var grid      = require('./api/grid.js').grid;
+var roi       = require('./api/roi.js').roi;
 
 // Express
 // -------
@@ -50,6 +51,7 @@ app.get('/flux/api/scenarios/:scenario/grid.json', grid);
 app.get('/flux/api/scenarios/:scenario/uncertainty.json', uncert);
 app.get('/flux/api/scenarios/:scenario/xy.json', xy);
 app.get('/flux/api/scenarios/:scenario/t.json', t);
+app.get('/flux/api/scenarios/:scenario/roi.json', roi);
 
 
 // Error Handling

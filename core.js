@@ -79,6 +79,8 @@ var core = {
                     INDEX[idx[i]._id] = idx[i].i;
                 };
             });
+            
+            self.DB = db;
 
         });
 
@@ -92,25 +94,77 @@ var core = {
         self.SCENARIOS          = scenarios;
         self.METADATA           = metadata;
         self.DATA               = data;
-        self.DB                 = db;
 
         self.app = (app) ? app : null;
+
+    },
+
+    
+    // Creates a Mongo DB collection from a coord index
+    //
+    //  @param coordArray       {Array} e.g. [[-83, 40],[-84,40]]
+    // 
+    createGeomCollectionFromCoordIndex: function (i, mydb, res) {
+        var tmp = '_geom';
+
+        // Remove an existing temporary collection
+        mydb.collection(tmp, function (err, collection) {
+            collection.remove({}, function (err, removed) {});
+
+        });
+
+        // Create an empty collection;
+        var collection = mydb.collection(tmp);
+        collection.ensureIndex({'loc':'2dsphere'}, function(err, result) {});
+
+        // Insert geom data from the coordinate array
+        collection.insert(Object.keys(i).map(function (x) {return {'loc': i[x]}; }),
+            {safe: true},
+            function(err, result) {});
+
+        return collection;
 
     },
 
     //  Given a WKT Point string, extracts and returns the coordinates:
     //
     //     @param  wktPointString  {String}  e.g. "POINT(-83 42)"
-    //     @return                 {Number}  The index of the model resolution cell
-    
+    //     @return                 {Array}   An array of the lat/long, e.g. [-83 42]
+
     pointCoords: function (wktPointString) {
         if (REGEX.wktPoint.test(wktPointString)) {
             return (function () {
                 var r = REGEX.wktPoint.exec(wktPointString);
                 return r.slice(1, 3).map(Number);
-            }())
+            }());
 
         }
+
+    },
+
+    //  Given a WKT Polygon string, extracts and returns the coordinates:
+    //  TODO: this is going to be ugly. Make better with REGEX like above
+    //  NOTE: does not currently support MULTIPOLYGON type
+    //
+    //     @param  wktPolygonString  {String}  e.g. "POLYGON((-83 42, -84 31,...))"
+    //     @return                   {Array}   An array of lat/long arrays,
+    //                                         e.g. [[-83 42],[-84 31],...]
+
+    polyCoords: function (wktPolyString) {
+        var c = wktPolyString.replace('POLYGON((', '').replace('))', '').split(',');
+
+        return [c.map(function (v) {
+            return v.split(' ').map(Number);
+
+        })];
+
+//         if (REGEX.wktPoint.test(wktPointString)) {
+//             return (function () {
+//                 var r = REGEX.wktPoint.exec(wktPointString);
+//                 return r.slice(1, 3).map(Number);
+//             }())
+// 
+//         }
 
     },
 
@@ -118,7 +172,7 @@ var core = {
     // 
     //     @param  timeString  {String}
     //     @return             {Number || String}
- 
+
     uncertaintyTime: function (timeString) {
         // As of this time, only monthly and annual (yearly) uncertainties are available
         if (REGEX.monthly.test(timeString)) {
@@ -138,7 +192,7 @@ var core = {
     //     @param  coords  {Array}     e.g. [-83, 42]
     //     @param  scn     {String}    e.g. "zerozero_orch_shortaft_10twr"
     //     @return         {Number}    The index of the model resolution cell
-    
+
     getCellIndex: function (coords, scn) {
         var i, idx;
 
@@ -158,7 +212,25 @@ var core = {
         }
 
         return idx;
+    },
+
+    getAverage: function (data) {
+        var sum = data.reduce(function (sum, value) {
+            return sum + value;
+        }, 0);
+        return sum / data.length;
+    },
+
+    getStandardDeviation: function (values) {
+        var avg = this.getAverage(values);
+
+        var squareDiffs = values.map(function (value){
+            return Math.pow((value - avg), 2);
+        });
+
+        return Math.sqrt(this.getAverage(squareDiffs));
     }
+
 };
 
 exports.core = core;
