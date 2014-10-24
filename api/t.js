@@ -23,6 +23,7 @@ var _ = require('underscore');
 //       (start, end, aggregate),
 
 function t (req, res) {
+
     var body, coords, grouping, i, idx, projection;
     var collection = core.DATA[req.params.scenario];
     var aggregate = {};
@@ -91,61 +92,9 @@ function t (req, res) {
 
                 if (err) console.log(err);
 
-                switch (req.query.aggregate) {
-                    case 'positive':
-                    subop = function (s) {
-                        return _.reduce(s, function (memo, v) {
-                            return (v > 0) ? memo + v : memo;
-                        }, 0);
-                    };
-                    break;
+                subop = core.getSubOp(req.query.aggregate);
 
-                    case 'negative':
-                    subop = function (s) {
-                        return _.reduce(s, function (memo, v) {
-                            return (v < 0) ? memo + v : memo;
-                        }, 0);
-                    };
-                    break;
-
-                    case 'net':
-                    subop = function (s) {
-                        return _.reduce(s, function (memo, v) {
-                            return memo + v;
-                        }, 0);
-                    };
-                    break;
-
-                    case 'mean':
-                    subop = function (s) {
-                        return _.reduce(s, function (memo, v) {
-                            return (memo + v) * 0.5;
-                        }, 0);
-                    };
-                    break;
-
-                    case 'min':
-                    subop = _.min;
-                    break;
-
-                    case 'max':
-                    subop = _.max;
-                    break;
-                }
-
-                switch (req.query.interval) {
-                    case 'hourly':
-                    unit = 'hour';
-                    break;
-
-                    case 'daily':
-                    unit = 'day';
-                    break;
-
-                    case 'monthly':
-                    unit = 'month';
-                    break;
-                }
+                unit = core.getIntervalUnit(req.query.interval);
 
                 operation = function (series) {
                     return subop(_.map(series, function (serie) {
@@ -327,7 +276,7 @@ function t (req, res) {
 
         }
 
-    // T Filtering in Space
+    // T Filtering in Space, by a single cell
     // --------------------
 
     } else if (_.has(req.query, 'coords')) {
@@ -366,6 +315,12 @@ function t (req, res) {
             // Send the response as a json object
             res.send(body);
         });
+	
+    // T Filtering in Space, by a multiple cells
+    // --------------------
+
+    } else if (_.has(req.query, 'geom')) {
+        core.checkGeometryCollection(req, res, core.runGeomQuery);
 
     } else {
         return res.send(400, 'Bad Request');
