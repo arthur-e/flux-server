@@ -110,6 +110,8 @@ var core = {
     //  @param  callback        {Function}      Callback function
 
     checkGeometryCollection: function (req, res, callback) {
+        // variable representing the name of the geometry collection for the
+        // specified scenario
         var n = '_geom_' + req.params.scenario; 
         
         this.DB.collectionNames(n, function(err, items) {
@@ -285,41 +287,85 @@ var core = {
                 return res.send(404, 'Indices undefined');
             }
             
-            // Now get filter the data by date
-            collection.find({
-                '_id': {
-                    '$gte': new Date(req.query.start),
-                    '$lte': new Date(req.query.end)
-                }
-            }).sort({'_id': 1}).toArray(function (err, itemsAll) {
+            // We need separate functions for gridded/non-gridded data:
+            //  -For gridded data, the '_id' field represents date/time
+            //  -For non-gridded data, the 'timestamp' field represents date/time
+            //
+            // Here, we assume that if the 'timestamp' property exists, it's
+            // non-gridded
+            var gridded = core.METADATA[req.params.scenario]['gridded'];
+            
+            var query = {};
+            var dt_start = new Date(req.query.start);
+            var dt_end = new Date(req.query.end);
+            
+            
+            if (gridded) {
+                query['_id'] = {
+                    '$gte': dt_start,
+                    '$lte': dt_end
+                };
+            }
+           
+            //collection.find(query).sort({'_id': 1}).toArray(function (err, itemsAll) {
+            collection.find(query).toArray(function (err, itemsAll) {
                 if (err) {return console.log(err); }
 
                 if (itemsAll.length === 0) {
-                    return res.send(404, 'No data found within requested time period');
-                } else if (!itemsAll[0].hasOwnProperty('values')) {
-                    return res.send(404, 'Query results do not have "values" property');
+                    return res.send(404, 'No results found');
+                } else if (gridded && !itemsAll[0].hasOwnProperty('values')) {
+                    return res.send(404, 'Query results for gridded data do not have "values" property');
+                } else if (!gridded &&
+                           !itemsAll[0].hasOwnProperty('properties') &&
+                           !itemsAll[0]['properties'].hasOwnProperty('value')) {
+                    return res.send(404, 'Query results for non-gridded data do not have [properties][value]');
                 }
 
+                
+                
                 // Filter by geometry
                 items = [];
-                itemsAll.forEach(function (item) {
-                    var vals = indices.map(function (idx) {
-                        return Number(item.values[idx]);
+                if (gridded) {
+                    itemsAll.forEach(function (item) {
+                        var vals = indices.map(function (idx) {
+                            return Number(item.values[idx]);
+                        });
+                        
+                        items.push({'_id': item['_id'],
+                                    'values': vals});
                     });
-                    items.push({'_id': item._id,
-                                'values': vals});
-                });
+                } else {
+                    var tmp = indices.map(function (idx) {
+                        return {'_id' : itemsAll[idx].timestamp,
+                                'value' : Number(itemsAll[idx].properties.value)
+                        };
+                    });
+
+                    // Filter by date for non-gridded data
+                    tmp_d = {};
+                    tmp.forEach(function (item) {
+                        if (item._id >= dt_start && item._id <= dt_end) {
+                            if (!_.has(tmp_d, item._id)) {
+                                tmp_d[item._id] = [];
+                            }
+                            tmp_d[item._id].push(item.value);
+                        }
+                    });
+
+                    items = Object.keys(tmp_d).sort().map(function (d) {
+                        return {'_id' : d, 'values': tmp_d[d]};
+                    });
+                }
                 
                 // Aggregate by time
-
-                if (!_.has(req.query, 'interval')) {
+                if (_.has(req.query, 'interval')) {
                     ds = {};
                     items.forEach(function (item) {
                         t = moment.utc(item._id).format('YYYYMMDD');
                         
                         if (!_.has(ds, t)) {
                             ds[t] =  {'sums': item.values,
-                                    'n': 1}
+                                      'n': 1}
                         } else {
                             ds[t]['n'] += 1
                             ds[t].sums = ds[t].sums.map(function (x, i) {return x + item.values[i]});
@@ -345,12 +391,7 @@ var core = {
                     std = [],
                     n = [];
 
-
                 items.forEach(function (vals) {
-//                     var vals = indices.map(function (idx) {
-//                         return Number(item.values[idx]);
-//                     });
-
                     mean.push(Number(core.getAverage(vals).toFixed(core.PRECISION)));
                     std.push(Number(core.getStandardDeviation(vals).toFixed(core.PRECISION)));
                     min.push(Number(Math.min.apply(null, vals).toFixed(core.PRECISION)));
@@ -358,6 +399,10 @@ var core = {
                     n.push(vals.length);
                 });
 
+                var totalN = n.reduce(function(a, b) {
+                    return a + b;
+                }, 0)
+                
                 body = {
                     seriesMean: mean,
                     seriesMin: min,
@@ -367,7 +412,8 @@ var core = {
                     properties: {
                         start: req.query.start,
                         end: req.query.end,
-                        geom: coords
+                        geom: coords,
+                        totalN: totalN
                     }
                 }
 

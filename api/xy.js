@@ -97,17 +97,17 @@ function xy (req, res) {
         }
 
         if (!_.has(req.query, 'start') || !_.has(req.query, 'end')) {
-            return res.send(400, 'Bad Request');
+            return res.send(400, 'Bad Request: xy.js; both "start" and "end" parameters required');
         }
 
         // start && end parameter constraints
         if (!core.REGEX.iso8601.test(req.query.start) || !core.REGEX.iso8601.test(req.query.end)) {
-            return res.send(400, 'Bad Request');
+            return res.send(400, 'Bad Request: xy.js; "start" and/or "end" parameters are incorrectly formatted. "start" = ' + req.query.start + '; "end" = ' + req.query.end);
         }
 
         // aggregate parameter constraints
         if (!_.contains(['positive', 'negative', 'net', 'mean', 'min', 'max'], req.query.aggregate)) {
-            return res.send(400, 'Bad Request');
+            return res.send(400, 'Bad Request: xy.js; "aggregate" parameter invalid');
         }
 
         // Aggregation pipeline definition; can be modified later
@@ -264,7 +264,7 @@ function xy (req, res) {
             });
 
         } else {
-            return res.send(400, 'Bad Request');
+            return res.send(400, 'Bad Request: xy.js; error with "aggregate" parameter');
 
         }
 
@@ -284,7 +284,7 @@ function xy (req, res) {
 
         // start && end parameter constraints
         if (!core.REGEX.iso8601.test(req.query.start) || !core.REGEX.iso8601.test(req.query.end)) {
-            return res.send(400, 'Bad Request');
+            return res.send(400, 'Bad Request: xy.js; "start" and/or "end" parameters are incorrectly formatted. "start" = ' + req.query.start + '; "end" = ' + req.query.end);
         }
 
         collection.find({
@@ -330,7 +330,7 @@ function xy (req, res) {
         });
 
     } else {
-        return res.send(400, 'Bad Request');
+        return res.send(400, 'Bad Request: unkown xy.js request error');
 
     }
 
