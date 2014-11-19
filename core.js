@@ -389,7 +389,9 @@ var core = {
                     max = [],
                     min = [],
                     std = [],
-                    n = [];
+                    n = [],
+                    allVals = [],
+                    allN = 0;
 
                 items.forEach(function (vals) {
                     mean.push(Number(core.getAverage(vals).toFixed(core.PRECISION)));
@@ -397,9 +399,10 @@ var core = {
                     min.push(Number(Math.min.apply(null, vals).toFixed(core.PRECISION)));
                     max.push(Number(Math.max.apply(null, vals).toFixed(core.PRECISION)));
                     n.push(vals.length);
+                    allVals = allVals.concat(vals);
                 });
-
-                var totalN = n.reduce(function(a, b) {
+                
+                allN = n.reduce(function(a, b) {
                     return a + b;
                 }, 0)
                 
@@ -413,7 +416,11 @@ var core = {
                         start: req.query.start,
                         end: req.query.end,
                         geom: coords,
-                        totalN: totalN
+                        allMean: Number(core.getAverage(allVals).toFixed(core.PRECISION)),
+                        allMax: Number(Math.max.apply(null, allVals).toFixed(core.PRECISION)),
+                        allMin: Number(Math.min.apply(null, allVals).toFixed(core.PRECISION)),
+                        allSTD: Number(core.getStandardDeviation(allVals).toFixed(core.PRECISION)),
+                        allN: allVals.length
                     }
                 }
 
