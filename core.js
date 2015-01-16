@@ -1,16 +1,41 @@
+// This file contains the application's shared state and a variety of convenience
+// functions for handling requests. In particular, this file initializes:
+// * The reference list of available scenarios
+// * The reference list of metadata for those scenarios: the `metadata` collection in MongoDB
+// * A stored index of geographic model cells: the `coord_index` collection in MongoDB
+
+// Load dependencies
 var mongo = require('mongodb').MongoClient;
 var moment = require('./node_modules/moment/moment');
 var _ = require('underscore');
+
+// Global variables
+// ----------------
 var PROJ_DIR = '/usr/local/project/flux-server';
-var PRECISION = 2; // Floating-point precision for Flux measurements
-var VARIANCE_PRECISION = 3; // Floating-point precision for Flux measurements
-var INDEX = {}; // The INDEX contains the ordered arrangement of model cells
+
+// Floating-point precision for measurement values
+var PRECISION = 2;
+
+// Floating-point precision for measurement variance (and covariance)
+var VARIANCE_PRECISION = 3;
+
+// The `INDEX` contains the ordered arrangement of model cells
+var INDEX = {};
+
+// These regular expressions are used to validate parts of API requests
 var REGEX = {
     iso8601: /^\d{4}(-\d{2})?(-\d{2})?(T\d{2}:\d{2})?(:\d{2})?/,
     monthly: /^(\d{4})\-(\d{2})$/, // e.g. 2004-05
     yearly: /^(\d{4})/, // e.g. 2004
     wktPoint: /^POINT\((-?[\d\.]+)[ +]?(-?[\d\.]+)\)$/
 };
+
+// Pre-defined MongoDB queries
+// ---------------------------
+
+// This is a keyword lookup that translates between the user-friendly API
+// description of aggregation and the MongoDB syntax (e.g., when we say "net"
+// we mean the MongoDB `$sum` query of values)
 var AGGREGATES = {
     'net': '$sum',
     'mean': '$avg',
@@ -19,6 +44,9 @@ var AGGREGATES = {
     'positive': '$gte',
     'negative': '$lte'
 };
+
+// Like `AGGREGATES`, this is a lookup that maps user-friendly API descriptors
+// to MongoDB query constructs
 var INTERVALS = {
     'daily': {
         day: { '$dayOfYear': '$_id' },
@@ -35,11 +63,17 @@ var INTERVALS = {
         values: 1
     }
 };
+
+// These variables are initialized when the express app is first loaded (i.e.,
+// when the server is started)
 var db = null;
 var scenarios = [];
 var metadata = {};
 var data = {};
 
+// This is an object we export later that has a number of convenience functions
+// as well as the most-important `init()` function which initializes the shared
+// application state when the express app (the server) is first started
 var core = {
     init: function (app) {
         var self = this;
@@ -57,13 +91,13 @@ var core = {
             }).toArray(function (err, results) {
                 var i;
                 for (i = 0; i < results.length; i+=1){
-                    //Array containing the scenario strings. This is returned by the
-                    //scenarios endpoint
+                    // Array containing the scenario strings. This is returned by the
+                    // scenarios endpoint
                     scenarios.push(results[i]._id);
 
                     data[results[i]._id] = db.collection(results[i]._id);
 
-                };                
+                };
             });
 
             // Grab the metadata
