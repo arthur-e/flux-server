@@ -41,7 +41,7 @@ function roi (req, res) {
     // ------------------------------
 
     if (_.has(req.query, 'aggregate')) {
-        return res.send(404, 'Aggregate queries are not yet implemented');
+        return res.send(404, 'Aggregate queries are not yet supported for ROI statistics');
         
     } else if (_.has(req.query, 'geom')) {
         core.checkGeometryCollection(req, res, core.runGeomQuery);
