@@ -1,22 +1,27 @@
+// **This module contains request handlers for getting at uncertainty data (e.g.,
+// variance and covariance data).**
+
+// Load dependencies
 var core = require('../core').core;
 var numeric = require('numeric');
 var _ = require('underscore');
 
-// GET Parameters:
+// The following `GET` parameters are supported:
+
+// * `time`; used with: `covarianceAt`
+// * `covarianceAt`; used with: `time`
+// * `source`; used with: `start`, end`, `target`
+// * `target`; used with: `start`, end`, `source`
+// * `start`; used with: `end`, `source`, `target`
+// * `end`; used with: `start`, `source`, `target`
 //
-//     time          [Optional]  Used with: covarianceAt
-//     covarianceAt  [Optional]  Used with: time
-//     source        [Optional]  Used with: start, end, target
-//     target        [Optional]  Used with: start, end, source
-//     start         [Optional]  Used with: end, source, target
-//     end           [Optional]  Used with: start, source, target
+// The following are the only valid combinations of `GET` request parameters:
 //
-//     Valid combinations:
-//         (time),
-//         (time, covarianceAt),
-//         (start, end),
-//         (start, end, source, target),
-//         (source, target)
+//      (time)
+//      (time, covarianceAt)
+//      (start, end)
+//      (start, end, source, target)
+//      (source, target)
 
 function uncert (req, res) {
     var argument, collection, coords, idx, start, end, source, target;
@@ -29,8 +34,7 @@ function uncert (req, res) {
 
     numeric.precision = core.VARIANCE_PRECISION;
 
-    // time
-    // ----
+    // `time` parameter
     if (_.has(req.query, 'time')) {
 
         argument = core.uncertaintyTime(req.query.time);
@@ -72,7 +76,8 @@ function uncert (req, res) {
 
         } else {
 
-            collection.find({ // e.g. matches "ann.141" or "5.141"
+            // e.g. matches "ann.141" or "5.141"
+            collection.find({
                 '_id': {'$regex': RegExp('^' + argument + '\\.\\d+$')}
             }).toArray(function (err, docs) {
                 var i;
@@ -88,17 +93,17 @@ function uncert (req, res) {
                 docs.forEach(function (doc) {
                     var i = Number(doc._id.split('.').pop());
 
-                    // For a covariance matrix: Insert Array at the proper index
-                    //  and trim it according to its position--generates a
-                    //  lower-triangular matrix
-		    //
+                    // For a covariance matrix: Insert `Array` at the proper index
+                    // and trim it according to its position--generates a
+                    // lower-triangular matrix
+
                     // Set outside the loop:
-		    //
+
                     // `body.values.length = core.INDEX[req.params.scenario].length;`
-                    //
+
                     // Then:
-                    //
-		    // `body.values[i] = doc.v.slice(0, i + 1);`
+
+        		    // `body.values[i] = doc.v.slice(0, i + 1);`
 
                     body.features.push({
                         'variance': doc.v[i].toFixed(core.VARIANCE_PRECISION),
@@ -120,8 +125,7 @@ function uncert (req, res) {
                 return res.send(400, 'Bad Request');
             }
 
-            // source, target, start, end
-            // --------------------------
+            // `source`, `target`, `start`, or `end` parameters
             if (_.has(req.query, 'start')) {
                 if (!_.has(req.query, 'end')) return res.send(400, 'Bad Request');
 
@@ -137,15 +141,13 @@ function uncert (req, res) {
 
                 return res.send(501, 'Not Implemented'); //TODO
 
-            // source, target
-            // --------------
+            // `source`, `target` parameters
             } else {
                 return res.send(501, 'Not Implemented'); //TODO
 
             }
 
-        // start, end
-        // ----------
+        // `start`, `end` parameters
         } else if (_.has(req.query, 'start')) {
 
             if (!_.has(req.query, 'end')) return res.send(400, 'Bad Request');

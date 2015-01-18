@@ -18,16 +18,15 @@ var _ = require('underscore');
 // * `interval`; used with: `aggregate`, `coords`, `start`, `end`
 // * `start` **(Required)**; used with: `aggregate`, `coords`, `interval`, `end`, `geom`
 
-// The following are valid combinations of `GET` parameters; no combinations
-// not listed here are valid:
+// The following are the only valid combinations of `GET` parameters:
 //
-//      (coords, start, end),
-//      (coords, start, end, aggregate),
-//      (coords, start, end, aggregate, interval),
+//      (coords, start, end)
+//      (coords, start, end, aggregate)
+//      (coords, start, end, aggregate, interval)
 //      (geom, start, end, aggregate)
-//      (geom, start, end, aggregate, interval),
-//      (start, end, aggregate, interval),
-//      (start, end, aggregate),
+//      (geom, start, end, aggregate, interval)
+//      (start, end, aggregate, interval)
+//      (start, end, aggregate)
 
 function t (req, res) {
 

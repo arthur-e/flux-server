@@ -1,18 +1,25 @@
+// **This module contains the request handlers for all the spatial data requests
+// (requests for X-Y, i.e., map data).** These request handlers respond to
+// requests on the `xy.json` API endpoint.
+
+// Load dependencies
 var core = require('../core').core;
 var numeric = require('numeric');
 var _ = require('underscore');
 
-// GET Parameters:
+// The following `GET` parameters are supported; all are optional but either
+// `time` or both `start` and `end` must be used:
+
+// * `time`; used with: (None)
+// * `start`; used with: `aggregate`, `end`
+// * `end`; used with: `aggregate`, `start`
+// * `aggregate`; used with: `start`, `end`
+
+// The following are the only valid combinations of `GET` request parameters:
 //
-//     time        [Optional]  Used with: [None]
-//     start       [Optional]  Used with: aggregate, end
-//     end         [Optional]  Used with: aggregate, start
-//     aggregate   [Optional]  Used with: start, end
-//
-//     Valid combinations:
-//         (time),
-//         (start, end),
-//         (start, end, aggregate)
+//      (time)
+//      (start, end)
+//      (start, end, aggregate)
 
 function xy (req, res) {
     var collection = core.DATA[req.params.scenario];
@@ -25,21 +32,25 @@ function xy (req, res) {
     
     numeric.precision = core.PRECISION;
 
-    // XY Data (Maps)
-    // --------------
+    // Get a map for a specific time
+    // -----------------------------
 
     if (_.has(req.query, 'time')) {
         var body, cursor, i;
-        var argument = new Date(req.query.time); // Grab the date string from the query
+
+        // Grab the date string from the query
+        var argument = new Date(req.query.time);
 
         if (metadata.gridded) {
-            cursor = collection.find({'_id': argument}); // Gridded data uniquely indexed
+            // Gridded data are uniquely indexed
+            cursor = collection.find({'_id': argument});
         } else {
+            // Non-gridded data have non-unique IDs but a unique timestamp
             cursor = collection.find({'timestamp': argument});
         }
 
-        // Fetch the data from mongo and construct the JSON response
-        // Note that the mongo find query can use the date object instead
+        // Fetch the data from MongoDB and construct the JSON response;
+        // Note that MongoDB `find()` query can use the `Date` object instead
         // of a constructed date string
         cursor.toArray(function (err, map) {
             if (err) return console.log(err);
@@ -48,9 +59,8 @@ function xy (req, res) {
                 return res.send(404, 'Not Found');
             }
 
+            // In verbose mode, emit a GeoJSON-compliant FeatureCollection
             if (verbose) {
-                // Emit a GeoJSON-compliant FeatureCollection instead
-
                 body = {
                     'timestamp': argument.toISOString(),
                     'type': 'FeatureCollection',
@@ -71,7 +81,8 @@ function xy (req, res) {
                     });
                 });
 
-             } else {
+            // Otherwise, emit a stripped-down version that uses fewer bytes
+            } else {
                 body = {
                     'timestamp': argument.toISOString(),
                     'features': []
@@ -87,12 +98,13 @@ function xy (req, res) {
             return res.send(body);
         });
 
-    // XY Aggregation in Time (Maps)
-    // -----------------------------
+    // Get a map aggregated in time
+    // ----------------------------
 
     } else if (_.has(req.query, 'aggregate')) {
 
-        if (!metadata.gridded) { // Aggregating non-gridded data is not supported
+        // Aggregating non-gridded data is not supported
+        if (!metadata.gridded) {
             return res.send(501, 'Not Implemented');
         }
 
@@ -100,12 +112,12 @@ function xy (req, res) {
             return res.send(400, 'Bad Request: xy.js; both "start" and "end" parameters required');
         }
 
-        // start && end parameter constraints
+        // `start` and `end` parameter constraints
         if (!core.REGEX.iso8601.test(req.query.start) || !core.REGEX.iso8601.test(req.query.end)) {
             return res.send(400, 'Bad Request: xy.js; "start" and/or "end" parameters are incorrectly formatted. "start" = ' + req.query.start + '; "end" = ' + req.query.end);
         }
 
-        // aggregate parameter constraints
+        // `aggregate` parameter constraints
         if (!_.contains(['positive', 'negative', 'net', 'mean', 'min', 'max'], req.query.aggregate)) {
             return res.send(400, 'Bad Request: xy.js; "aggregate" parameter invalid');
         }
@@ -142,8 +154,7 @@ function xy (req, res) {
             i += 1;
         }
 
-        // min || max
-        // ----------
+        // `min` or `max` aggregation
         if (_.contains(['min', 'max'], req.query.aggregate)) {
 
             // Add the callback function to the argument list for the aggregate() pipeline
@@ -166,9 +177,11 @@ function xy (req, res) {
                     } else { // ...Compare it to evey document afterwards
                         _.each(doc.values, function (value, j) {
                             if (req.query.aggregate === 'min') {
-                                if (Number(value) < Number(result[j])) result[j] = value; // Update result with the max values
+                                // Update result with the max values
+                                if (Number(value) < Number(result[j])) result[j] = value;
                             } else {
-                                if (Number(value) > Number(result[j])) result[j] = value; // Update result with the min values
+                                // Or, update result with the min values
+                                if (Number(value) > Number(result[j])) result[j] = value;
                             }
                         });
 
@@ -176,13 +189,16 @@ function xy (req, res) {
                 });
 
                 tpl = _.clone(template);
-                tpl.features = _.chain(result).map(function (v) { // Convert to Number and fix precision
+
+                // Convert to Number and fix precision
+                tpl.features = _.chain(result).map(function (v) {
                     return Number(v.toFixed(core.PRECISION));
-                }).map(function (value, i) { // Format response body
+                }).map(function (value, i) {
+                    // Format response body
                     if (verbose) {
                         return {
                             'v': value,
-                            'type': 'Point', // Required for compliant GeoJSON
+                            'type': 'Point',
                             'coordinates': core.INDEX[req.params.scenario][i]
                         };
                     }
@@ -194,8 +210,7 @@ function xy (req, res) {
 
             });
 
-        // mean || net || positive || negative
-	// -----------------------------------
+        // `mean` or `net` or `positive` or `negative` aggregation
         } else if (_.contains(['mean', 'net', 'positive', 'negative'], req.query.aggregate)) {
 
             // Add the callback function to the argument list for the aggregate() pipeline
@@ -216,7 +231,8 @@ function xy (req, res) {
                     // Sum two Arrays at a time to get the total flux value in each cell
                     _.each(docs, function (doc) {
                         result = numeric['+'](result, _.map(doc.values, function (v) {
-                            return (v < 0) ? v : 0; // Sum only negative fluxes
+                            // Sum only negative fluxes
+                            return (v < 0) ? v : 0;
                         }));
                     });
                     break;
@@ -225,7 +241,8 @@ function xy (req, res) {
                     // Sum two Arrays at a time to get the total flux value in each cell
                     _.each(docs, function (doc) {
                         result = numeric['+'](result, _.map(doc.values, function (v) {
-                            return (v > 0) ? v : 0; // Sum only positive fluxes
+                            // Sum only posittive fluxes
+                            return (v > 0) ? v : 0;
                         }));
                     });
                     break;
@@ -247,11 +264,11 @@ function xy (req, res) {
                 tpl = _.clone(template);
                 tpl.features = _.chain(result).map(function (v) { // Convert to Number and fix precision
                     return Number(v.toFixed(core.PRECISION));
-                }).map(function (value, i) { // Format response body
+                }).map(function (value, i) {
                     if (verbose) {
                         return {
                             'v': value,
-                            'type': 'Point', // Required for compliant GeoJSON
+                            'type': 'Point',
                             'coordinates': core.INDEX[req.params.scenario][i]
                         };
                     }
@@ -269,12 +286,11 @@ function xy (req, res) {
         }
 
         // Invoke the aggregation pipeline with the arguments and callback function definition
-        collection.aggregate.apply(collection, definition) // Updates "result" variable
+        collection.aggregate.apply(collection, definition)
 
 	
-    // XY Feature Collection
-    // ---------------------
-    
+    // Get a FeatureCollection of non-gridded spatial data
+    // ---------------------------------------------------
     } else if (_.has(req.query, 'start') && _.has(req.query, 'end')) {
 
         // Returning more than a single time step not supported for gridded data
@@ -282,7 +298,7 @@ function xy (req, res) {
             return res.send(501, 'Not Implemented');
         }
 
-        // start && end parameter constraints
+        // `start` and `end` parameter constraints
         if (!core.REGEX.iso8601.test(req.query.start) || !core.REGEX.iso8601.test(req.query.end)) {
             return res.send(400, 'Bad Request: xy.js; "start" and/or "end" parameters are incorrectly formatted. "start" = ' + req.query.start + '; "end" = ' + req.query.end);
         }
@@ -302,8 +318,6 @@ function xy (req, res) {
             }
 
             if (verbose) {
-                // Emit a GeoJSON-compliant FeatureCollection instead
-
                 return res.send({
                     'type': 'FeatureCollection',
                     'features': _.map(features, function (feature) {
