@@ -1,26 +1,33 @@
+// **This module contains the request handlers for all time series data
+// requests.** These request handlers respond to requests on the `t.json`
+// API endpoint.
+
+// Load dependencies
 var core = require('../core').core;
 var moment = require('../node_modules/moment/moment');
 var numeric = require('numeric');
 var _ = require('underscore');
 
-// GET Parameters:
+// The following `GET` parameters are supported; all are optional except for
+// `start` and `end` parameters, required for every request:
+
+// * `aggregate`; used with: `coords`, `interval`, `start`, `end`, `geom`
+// * `coords`; used with: `aggregate`, `interval`, `start`, `end`
+// * `end` **(Required)**; used with: `aggregate`, `coords`, `interval`, `start`, `geom`
+// * `geom`; used with: `aggregate`, `coords`, `start`, `end`
+// * `interval`; used with: `aggregate`, `coords`, `start`, `end`
+// * `start` **(Required)**; used with: `aggregate`, `coords`, `interval`, `end`, `geom`
+
+// The following are valid combinations of `GET` parameters; no combinations
+// not listed here are valid:
 //
-//     aggregate   [Optional]  Used with: coords, interval, start, end, geom
-//     coords      [Optional]  Used with: aggregate, interval, start, end
-//     end         [Optional]  Used with: aggregate, coords, interval, start, geom
-//     geom        [Optional]  Used with: aggregate, coords, start, end
-//     interval    [Optional]  Used with: aggregate, coords, start, end
-//     start       [Optional]  Used with: aggregate, coords, interval, end, geom
-//
-//     Valid combinations:
-//       (coords),
-//       (coords, start, end),
-//       (coords, start, end, aggregate),
-//       (coords, start, end, aggregate, interval),
-//       (geom, start, end, aggregate)
-//       (geom, start, end, aggregate, interval),
-//       (start, end, aggregate, interval),
-//       (start, end, aggregate),
+//      (coords, start, end),
+//      (coords, start, end, aggregate),
+//      (coords, start, end, aggregate, interval),
+//      (geom, start, end, aggregate)
+//      (geom, start, end, aggregate, interval),
+//      (start, end, aggregate, interval),
+//      (start, end, aggregate),
 
 function t (req, res) {
 
@@ -32,45 +39,49 @@ function t (req, res) {
         return res.send(404, 'Not Found');
     }
 
+    // `start` and `end` parameters are required
     if (!_.has(req.query, 'start') || !_.has(req.query, 'end')) {
         return res.send(400, 'Bad Request');
     }
 
-    // start && end parameter constraints
+    // `start` and `end` parameter constraints
     if (!core.REGEX.iso8601.test(req.query.start) || !core.REGEX.iso8601.test(req.query.end)) {
         return res.send(400, 'Bad Request');
     }
 
     numeric.precision = core.PRECISION;
 
-    // T Aggregation in Space or Time
-    // ------------------------------
+    // Get aggregate time series
+    // -------------------------
 
     if (_.has(req.query, 'aggregate')) {
 
-        // aggregate parameter constraints
+        // `aggregate` parameter constraints
         if (!_.contains(['positive', 'negative', 'net', 'mean', 'min', 'max'], req.query.aggregate)) {
             return res.send(400, 'Bad Request');
         }
 
-        // geom
+        // If `geom` parameter present... This hasn't been implemented yet!
         if (_.has(req.query, 'geom')) {
 
             return res.send(501, 'Not Implemented'); //TODO
 
-        // coords
+        // Get aggregate time series at specific coordinates
+        // -------------------------------------------------
+
+        // If `coords` paramter present...
         } else if (_.has(req.query, 'coords')) {
 
             if (!_.has(req.query, 'interval')) {
                 return res.send(400, 'Bad Request');
             }
 
-            // interval parameter constraints
+            // `interval` parameter constraints
             if (!_.contains(['daily', 'monthly', 'annual'], req.query.interval)) {
                 return res.send(400, 'Bad Request');
             }
 
-            // Get the integer value of the cell index
+            // Get the integer value of the cell indexg
             coords = core.pointCoords(req.query.coords);
             idx = core.getCellIndex(coords, req.params.scenario);
 
@@ -78,6 +89,8 @@ function t (req, res) {
                 return res.send(400, 'Bad Request');
             }
 
+            // Query for data slices (MongoDB documents) that are within the
+            // `start` and `end` date range
             collection.find({
                 '_id': {
                     '$gte': new Date(req.query.start),
@@ -92,16 +105,25 @@ function t (req, res) {
 
                 if (err) console.log(err);
 
+                // Figure out what kind of aggregation needs to be performed
+                // based on the `aggregate` keyword provided; `subop` is a
+                // reducer (function)
                 subop = core.getSubOp(req.query.aggregate);
 
+                // Similarly, figure out over what time interval aggregation is
+                // to be performed (or, for no aggregation, at what time
+                // intervals values should be returned) based on the `interval` keyword
                 unit = core.getIntervalUnit(req.query.interval);
 
+                // Define a map-reduce operation
                 operation = function (series) {
                     return subop(_.map(series, function (serie) {
                         return serie.values[idx];
                     }));
                 };
 
+                // Get values at each valid time step (according to the number
+                // of `unit`) to construct a time series
                 t1 = t0.clone().add(1, unit);
                 while (j < docs.length) {
                     if (moment.utc(docs[j]._id).isSame(t1) || moment.utc(docs[j]._id).isAfter(t1)) {
@@ -121,6 +143,8 @@ function t (req, res) {
                     j += 1;
                 }
 
+                // Finally, return a JSON response with appropriate metadata in
+                // `properties` and the time `series` itself
                 return res.send({
                     properties: {
                         aggregate: req.query.aggregate,
@@ -136,15 +160,23 @@ function t (req, res) {
 
             });
 
-        // interval? && start && end && aggregate
+        // Get aggregate time series aggregated across the entire spatial domain
+        // ---------------------------------------------------------------------
+
+        // Here, the time series returned may be aggregated in both space and
+        // time; the entire spatial domain of the data is aggregated based on
+        // the time `interval` specified.
+
+        // If `interval` parameter used with `aggregate`...
         } else {
 
             if (_.has(req.query, 'interval')) {
-                // interval parameter constraints
+                // `interval` parameter constraints
                 if (!_.contains(['daily', 'monthly', 'annual'], req.query.interval)) {
                     return res.send(400, 'Bad Request');
                 }
 
+                // Determine what interval to aggregate the data to
                 projection = core.INTERVALS[req.query.interval];
                 grouping = {
                     'year': '$year',
@@ -157,14 +189,14 @@ function t (req, res) {
             } else {
                 // Default to the temporal resolution of the data (no temporal
                 //  aggregation)
-                projection = {
+                projection = {a
                     '_id': '$_id',
                     'values': '$values'
                 };
                 grouping = '$_id';
             }
 
-            // positive || negative
+            // For `positive` or `negative` aggregation...
             if (_.contains(['positive', 'negative'], req.query.aggregate)) {
 
                 // Creates object aggregate e.g. {'$gte': 0}
@@ -173,8 +205,10 @@ function t (req, res) {
                     value: 0
                 });
 
-                // New implementation using the aggregation framework.
-                //  Response time averages around 4.3 seconds. 
+                // This is a new implementation using the aggregation framework;
+                // the response time averages around 4.3 seconds.
+
+                // Call the MongoDB aggregation pipeline
                 collection.aggregate({
                     '$match': {
                         '_id': {
@@ -221,15 +255,16 @@ function t (req, res) {
                     });
                 });
 
-            // net || mean || min || max
+            // For all other kinds of aggregation (`net`, `mean`, `min`, `max`)...
             } else {
 
-                // Creates object aggregate e.g. {'$sum': '$values'}
+                // Creates object aggregate e.g. `{'$sum': '$values'}`
                 Object.defineProperty(aggregate, core.AGGREGATES[req.query.aggregate], {
                     enumerable: true,
                     value: '$values'
                 });
 
+                // Call the MongoDB aggregation pipeline
                 collection.aggregate({
                     '$match': {
                         '_id': {
@@ -276,8 +311,10 @@ function t (req, res) {
 
         }
 
-    // T Filtering in Space, by a single cell
-    // --------------------
+    // Get a raw time series for a single grid cell
+    // --------------------------------------------
+
+    // Here, the time series returned is not aggregated.
 
     } else if (_.has(req.query, 'coords')) {
         coords = core.pointCoords(req.query.coords);
@@ -287,6 +324,7 @@ function t (req, res) {
             return res.send(404, 'Not Found');
         }
 
+        // Filter the MongoDB collection to the `start` and `end` date range...
         collection.find({
             '_id': {
                 '$gte': new Date(req.query.start),
@@ -301,6 +339,8 @@ function t (req, res) {
                 return res.send(404, 'Not Found');
             }
 
+            // Extract the value at the specified grid cell index `idx` for
+            // every time slice
             body = {
                 series: items.map(function (v, i) {
                     return Number(v.values[idx].toFixed(core.PRECISION));
@@ -312,12 +352,14 @@ function t (req, res) {
                 }
             }
 
-            // Send the response as a json object
+            // Send the response as a JSON object
             res.send(body);
         });
 	
-    // T Filtering in Space, by a multiple cells
-    // --------------------
+    // Get a raw time series for multiple grid cells
+    // ---------------------------------------------
+
+    // This isn't supported yet.
 
     } else if (_.has(req.query, 'geom')) {
         core.checkGeometryCollection(req, res, core.runGeomQuery);

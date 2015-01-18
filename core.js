@@ -134,18 +134,16 @@ var core = {
         self.app = (app) ? app : null;
 
     },
-    
-    // Retrieves an existing geometry collection for the requested scenario,
-    // creates one if it does not exist, and passes the result to a
-    // callback function.
-    //
-    //  @param  req             {Object}        HTTP get request
-    //  @param  res             {Object}        HTTP response object
-    //  @param  callback        {Function}      Callback function
 
+    // Convenience functions
+    // ---------------------
+    
+    // `checkGeometryCollection()` retrieves an existing geometry
+    // collection for the requested scenario, creates one if it does not exist,
+    // and passes the result to a callback function.
     checkGeometryCollection: function (req, res, callback) {
-        // variable representing the name of the geometry collection for the
-        // specified scenario
+        // Variable representing the name of the MongoDB geometry collection
+        // for the specified scenario
         var n = '_geom_' + req.params.scenario; 
         
         this.DB.collectionNames(n, function(err, items) {
@@ -157,7 +155,8 @@ var core = {
             if (items.length === 0) {
                 var geom_coll = core.getGeomCollection(req.params.scenario);
                 
-                // Build geometry collection from the cooresponding coord_index document
+                // Build geometry collection from the cooresponding
+                // `coord_index` document
                 geom_coll.insert(core.INDEX[req.params.scenario].map(function (x, i) {
                         return {'ll': x, 'idx': i};
                     }),
@@ -181,6 +180,8 @@ var core = {
         });
     },
     
+    // `getIntervalUnit()` translates between user-friendly API time descriptors
+    // and MongoDB time descriptors
     getIntervalUnit: function(interval) {
         switch (interval) {
             case 'hourly':
@@ -198,7 +199,9 @@ var core = {
         
         return unit;
     },
-    
+
+    // `getSubOp()` returns a reducer (function) based on the type of
+    // aggregation operation requested
     getSubOp: function(aggregate) {
         switch (aggregate) {
             case 'positive':
@@ -245,11 +248,8 @@ var core = {
         return subop;
     },
 
-    //  Given a WKT Point string, extracts and returns the coordinates:
-    //
-    //     @param  wktPointString  {String}  e.g. "POINT(-83 42)"
-    //     @return                 {Array}   An array of the lat/long, e.g. [-83 42]
-
+    // `pointCoords()` is a function that, given a WKT Point string,
+    // extracts and returns the coordinates
     pointCoords: function (wktPointString) {
         if (REGEX.wktPoint.test(wktPointString)) {
             return (function () {
@@ -261,15 +261,11 @@ var core = {
 
     },
 
-    //  Given a WKT Polygon string, extracts and returns the coordinates:
-    //  TODO: this is going to be ugly. Make better with REGEX like above
-    //  NOTE: does not currently support MULTIPOLYGON type
-    //
-    //     @param  wktPolygonString  {String}  e.g. "POLYGON((-83 42, -84 31,...))"
-    //     @return                   {Array}   An array of lat/long arrays,
-    //                                         e.g. [[-83 42],[-84 31],...]
-
+    // `polyCoords()` is a function that, given a WKT Polygon string,
+    // extracts and returns the coordinates; does not support MultiPolygons
     polyCoords: function (wktPolyString) {
+
+        // TODO: This is going to be ugly; could improve with RegExp like above
         var c = wktPolyString.replace('POLYGON((', '').replace('))', '').split(',');
 
         return [c.map(function (v) {
@@ -279,11 +275,8 @@ var core = {
 
     },
 
-    //  Runs polygon geometry query and posts HTTP response as JSON object
-    //
-    //     @param  req  {Array}
-    //     @param  res
-    
+    // `runGeomQuery()` runs a polygon geometry query and posts HTTP response
+    // as a JSON object
     runGeomQuery: function(req, res) {
         var indices = [];
         var geom_coll =  core.getGeomCollection(req.params.scenario); 
@@ -322,17 +315,15 @@ var core = {
             }
             
             // We need separate functions for gridded/non-gridded data:
-            //  -For gridded data, the '_id' field represents date/time
-            //  -For non-gridded data, the 'timestamp' field represents date/time
-            //
+            // * For gridded data, the '_id' field represents date/time
+            // * For non-gridded data, the 'timestamp' field represents date/time
+
             // Here, we assume that if the 'timestamp' property exists, it's
             // non-gridded
             var gridded = core.METADATA[req.params.scenario]['gridded'];
-            
             var query = {};
             var dt_start = new Date(req.query.start);
             var dt_end = new Date(req.query.end);
-            
             
             if (gridded) {
                 query['_id'] = {
@@ -341,7 +332,6 @@ var core = {
                 };
             }
            
-            //collection.find(query).sort({'_id': 1}).toArray(function (err, itemsAll) {
             collection.find(query).toArray(function (err, itemsAll) {
                 if (err) {return console.log(err); }
 
@@ -355,8 +345,6 @@ var core = {
                     return res.send(404, 'Query results for non-gridded data do not have [properties][value]');
                 }
 
-                
-                
                 // Filter by geometry
                 items = [];
                 if (gridded) {
@@ -418,7 +406,7 @@ var core = {
                     
                 }
                 
-                // And aggregate by geom
+                // And aggregate by `geom`
                 var mean = [],
                     max = [],
                     min = [],
@@ -458,14 +446,15 @@ var core = {
                     }
                 }
 
-                // Send the response as a json object
+                // Send the response as a JSON object
                 res.send(body);
             });
         });
     },
     
     
-    // Extracts and formats a keyword representation of a time unit from a String:
+    // `uncertaintyTime()` extracts and formats a keyword representation
+    // of a time unit from a `String`
     // 
     //     @param  timeString  {String}
     //     @return             {Number || String}
@@ -483,10 +472,10 @@ var core = {
 
     },
 
-    // Just gets mean from an array of numbers
+    // `getAverage()` calculates the mean from an array of numbers
     //
-    //  @param  data    {Array}       e.g. [3,4,-9]
-    //  @return         {Number}
+    //      @param  data    {Array}       e.g. [3,4,-9]
+    //      @return         {Number}
     
     getAverage: function (data) {
         var sum = data.reduce(function (sum, value) {
@@ -495,8 +484,8 @@ var core = {
         return sum / data.length;
     },
     
-    // Given point coordinates, looks up the index of the corresponding resolution
-    // cell's coordinates.
+    // `getCellIndex()`, given point coordinates, looks up the index of the
+    // corresponding resolution cell's coordinates
     //
     //     @param  coords  {Array}     e.g. [-83, 42]
     //     @param  scn     {String}    e.g. "zerozero_orch_shortaft_10twr"
@@ -523,21 +512,14 @@ var core = {
         return idx;
     },
     
-    // Returns the geometry collection corresponding to a 
+    // `getGeomCollection()` returns the geometry collection corresponding to a 
     // scenario collection
-    //
-    //  @param  {String}              e.g. 'casa_gfed_2004'
-    //  @return {MongoDB collection}
-    
     getGeomCollection: function(scenario) {
         return this.DB.collection('_geom_' + scenario); 
     },
 
-    // Just gets standard deviation from an array of numbers
-    //
-    //  @param  data    {Array}       e.g. [3,4,-9]
-    //  @return         {Number}
-    
+    // `getStandardDeviation()` calculates the standard deviation from an
+    // `Array` of numbers
     getStandardDeviation: function (values) {
         var avg = this.getAverage(values);
 
