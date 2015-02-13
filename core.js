@@ -265,7 +265,7 @@ var core = {
     // extracts and returns the coordinates; does not support MultiPolygons
     polyCoords: function (wktPolyString) {
 
-        // TODO: This is going to be ugly; could improve with RegExp like above
+        // TODO: could improve with RegExp like above
         var c = wktPolyString.replace('POLYGON((', '').replace('))', '').split(',');
         
         return [c.reduce(function(accum, current) {
