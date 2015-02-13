@@ -1,16 +1,41 @@
+// This file contains the application's shared state and a variety of convenience
+// functions for handling requests. In particular, this file initializes:
+// * The reference list of available scenarios
+// * The reference list of metadata for those scenarios: the `metadata` collection in MongoDB
+// * A stored index of geographic model cells: the `coord_index` collection in MongoDB
+
+// Load dependencies
 var mongo = require('mongodb').MongoClient;
 var moment = require('./node_modules/moment/moment');
 var _ = require('underscore');
+
+// Global variables
+// ----------------
 var PROJ_DIR = '/usr/local/project/flux-server';
-var PRECISION = 2; // Floating-point precision for Flux measurements
-var VARIANCE_PRECISION = 3; // Floating-point precision for Flux measurements
-var INDEX = {}; // The INDEX contains the ordered arrangement of model cells
+
+// Floating-point precision for measurement values
+var PRECISION = 2;
+
+// Floating-point precision for measurement variance (and covariance)
+var VARIANCE_PRECISION = 3;
+
+// The `INDEX` contains the ordered arrangement of model cells
+var INDEX = {};
+
+// These regular expressions are used to validate parts of API requests
 var REGEX = {
     iso8601: /^\d{4}(-\d{2})?(-\d{2})?(T\d{2}:\d{2})?(:\d{2})?/,
     monthly: /^(\d{4})\-(\d{2})$/, // e.g. 2004-05
     yearly: /^(\d{4})/, // e.g. 2004
     wktPoint: /^POINT\((-?[\d\.]+)[ +]?(-?[\d\.]+)\)$/
 };
+
+// Pre-defined MongoDB queries
+// ---------------------------
+
+// This is a keyword lookup that translates between the user-friendly API
+// description of aggregation and the MongoDB syntax (e.g., when we say "net"
+// we mean the MongoDB `$sum` query of values)
 var AGGREGATES = {
     'net': '$sum',
     'mean': '$avg',
@@ -19,6 +44,9 @@ var AGGREGATES = {
     'positive': '$gte',
     'negative': '$lte'
 };
+
+// Like `AGGREGATES`, this is a lookup that maps user-friendly API descriptors
+// to MongoDB query constructs
 var INTERVALS = {
     'daily': {
         day: { '$dayOfYear': '$_id' },
@@ -35,11 +63,17 @@ var INTERVALS = {
         values: 1
     }
 };
+
+// These variables are initialized when the express app is first loaded (i.e.,
+// when the server is started)
 var db = null;
 var scenarios = [];
 var metadata = {};
 var data = {};
 
+// This is an object we export later that has a number of convenience functions
+// as well as the most-important `init()` function which initializes the shared
+// application state when the express app (the server) is first started
 var core = {
     init: function (app) {
         var self = this;
@@ -57,13 +91,13 @@ var core = {
             }).toArray(function (err, results) {
                 var i;
                 for (i = 0; i < results.length; i+=1){
-                    //Array containing the scenario strings. This is returned by the
-                    //scenarios endpoint
+                    // Array containing the scenario strings. This is returned by the
+                    // scenarios endpoint
                     scenarios.push(results[i]._id);
 
                     data[results[i]._id] = db.collection(results[i]._id);
 
-                };                
+                };
             });
 
             // Grab the metadata
@@ -100,18 +134,16 @@ var core = {
         self.app = (app) ? app : null;
 
     },
-    
-    // Retrieves an existing geometry collection for the requested scenario,
-    // creates one if it does not exist, and passes the result to a
-    // callback function.
-    //
-    //  @param  req             {Object}        HTTP get request
-    //  @param  res             {Object}        HTTP response object
-    //  @param  callback        {Function}      Callback function
 
+    // Convenience functions
+    // ---------------------
+    
+    // `checkGeometryCollection()` retrieves an existing geometry
+    // collection for the requested scenario, creates one if it does not exist,
+    // and passes the result to a callback function.
     checkGeometryCollection: function (req, res, callback) {
-        // variable representing the name of the geometry collection for the
-        // specified scenario
+        // Variable representing the name of the MongoDB geometry collection
+        // for the specified scenario
         var n = '_geom_' + req.params.scenario; 
         
         this.DB.collectionNames(n, function(err, items) {
@@ -123,7 +155,8 @@ var core = {
             if (items.length === 0) {
                 var geom_coll = core.getGeomCollection(req.params.scenario);
                 
-                // Build geometry collection from the cooresponding coord_index document
+                // Build geometry collection from the cooresponding
+                // `coord_index` document
                 geom_coll.insert(core.INDEX[req.params.scenario].map(function (x, i) {
                         return {'ll': x, 'idx': i};
                     }),
@@ -147,6 +180,8 @@ var core = {
         });
     },
     
+    // `getIntervalUnit()` translates between user-friendly API time descriptors
+    // and MongoDB time descriptors
     getIntervalUnit: function(interval) {
         switch (interval) {
             case 'hourly':
@@ -164,7 +199,9 @@ var core = {
         
         return unit;
     },
-    
+
+    // `getSubOp()` returns a reducer (function) based on the type of
+    // aggregation operation requested
     getSubOp: function(aggregate) {
         switch (aggregate) {
             case 'positive':
@@ -211,11 +248,8 @@ var core = {
         return subop;
     },
 
-    //  Given a WKT Point string, extracts and returns the coordinates:
-    //
-    //     @param  wktPointString  {String}  e.g. "POINT(-83 42)"
-    //     @return                 {Array}   An array of the lat/long, e.g. [-83 42]
-
+    // `pointCoords()` is a function that, given a WKT Point string,
+    // extracts and returns the coordinates
     pointCoords: function (wktPointString) {
         if (REGEX.wktPoint.test(wktPointString)) {
             return (function () {
@@ -227,15 +261,11 @@ var core = {
 
     },
 
-    //  Given a WKT Polygon string, extracts and returns the coordinates:
-    //  TODO: this is going to be ugly. Make better with REGEX like above
-    //  NOTE: does not currently support MULTIPOLYGON type
-    //
-    //     @param  wktPolygonString  {String}  e.g. "POLYGON((-83 42, -84 31,...))"
-    //     @return                   {Array}   An array of lat/long arrays,
-    //                                         e.g. [[-83 42],[-84 31],...]
-
+    // `polyCoords()` is a function that, given a WKT Polygon string,
+    // extracts and returns the coordinates; does not support MultiPolygons
     polyCoords: function (wktPolyString) {
+
+        // TODO: This is going to be ugly; could improve with RegExp like above
         var c = wktPolyString.replace('POLYGON((', '').replace('))', '').split(',');
         
         return [c.reduce(function(accum, current) {
@@ -251,11 +281,8 @@ var core = {
                 })];
 },
 
-    //  Runs polygon geometry query and posts HTTP response as JSON object
-    //
-    //     @param  req  {Array}
-    //     @param  res
-    
+    // `runGeomQuery()` runs a polygon geometry query and posts HTTP response
+    // as a JSON object
     runGeomQuery: function(req, res) {
         var indices = [];
         var geom_coll =  core.getGeomCollection(req.params.scenario); 
@@ -294,17 +321,15 @@ var core = {
             }
             
             // We need separate functions for gridded/non-gridded data:
-            //  -For gridded data, the '_id' field represents date/time
-            //  -For non-gridded data, the 'timestamp' field represents date/time
-            //
+            // * For gridded data, the '_id' field represents date/time
+            // * For non-gridded data, the 'timestamp' field represents date/time
+
             // Here, we assume that if the 'timestamp' property exists, it's
             // non-gridded
             var gridded = core.METADATA[req.params.scenario]['gridded'];
-            
             var query = {};
             var dt_start = new Date(req.query.start);
             var dt_end = new Date(req.query.end);
-            
             
             if (gridded) {
                 query['_id'] = {
@@ -313,7 +338,6 @@ var core = {
                 };
             }
            
-            //collection.find(query).sort({'_id': 1}).toArray(function (err, itemsAll) {
             collection.find(query).toArray(function (err, itemsAll) {
                 if (err) {return console.log(err); }
 
@@ -327,8 +351,6 @@ var core = {
                     return res.send(404, 'Query results for non-gridded data do not have [properties][value]');
                 }
 
-                
-                
                 // Filter by geometry
                 items = [];
                 if (gridded) {
@@ -390,7 +412,7 @@ var core = {
                     
                 }
                 
-                // And aggregate by geom
+                // And aggregate by `geom`
                 var mean = [],
                     max = [],
                     min = [],
@@ -430,14 +452,15 @@ var core = {
                     }
                 }
 
-                // Send the response as a json object
+                // Send the response as a JSON object
                 res.send(body);
             });
         });
     },
     
     
-    // Extracts and formats a keyword representation of a time unit from a String:
+    // `uncertaintyTime()` extracts and formats a keyword representation
+    // of a time unit from a `String`
     // 
     //     @param  timeString  {String}
     //     @return             {Number || String}
@@ -455,10 +478,10 @@ var core = {
 
     },
 
-    // Just gets mean from an array of numbers
+    // `getAverage()` calculates the mean from an array of numbers
     //
-    //  @param  data    {Array}       e.g. [3,4,-9]
-    //  @return         {Number}
+    //      @param  data    {Array}       e.g. [3,4,-9]
+    //      @return         {Number}
     
     getAverage: function (data) {
         var sum = data.reduce(function (sum, value) {
@@ -467,8 +490,8 @@ var core = {
         return sum / data.length;
     },
     
-    // Given point coordinates, looks up the index of the corresponding resolution
-    // cell's coordinates.
+    // `getCellIndex()`, given point coordinates, looks up the index of the
+    // corresponding resolution cell's coordinates
     //
     //     @param  coords  {Array}     e.g. [-83, 42]
     //     @param  scn     {String}    e.g. "zerozero_orch_shortaft_10twr"
@@ -495,21 +518,14 @@ var core = {
         return idx;
     },
     
-    // Returns the geometry collection corresponding to a 
+    // `getGeomCollection()` returns the geometry collection corresponding to a 
     // scenario collection
-    //
-    //  @param  {String}              e.g. 'casa_gfed_2004'
-    //  @return {MongoDB collection}
-    
     getGeomCollection: function(scenario) {
         return this.DB.collection('_geom_' + scenario); 
     },
 
-    // Just gets standard deviation from an array of numbers
-    //
-    //  @param  data    {Array}       e.g. [3,4,-9]
-    //  @return         {Number}
-    
+    // `getStandardDeviation()` calculates the standard deviation from an
+    // `Array` of numbers
     getStandardDeviation: function (values) {
         var avg = this.getAverage(values);
 

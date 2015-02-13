@@ -1,6 +1,15 @@
-// The Fluxvis app server
-// ======================
+// The Carbon Web API Server
+// =========================
 
+// **Documentation last updated: January 16, 2015**
+
+// The Carbon Web API Server ("flux-server") is the software layer that handles
+// client requests for data, queries the MongoDB database, and returns data in
+// the appropriate format. It is intended to run on a local network or over the
+// internet (i.e., on a remote server) to handle requests issued from the
+// Carbon Web API Client (the Carbon Data Explorer or "flux-client").
+
+// Load dependencies
 var _       = require('underscore');
 var fs      = require('fs')
 var numeric = require('numeric');
@@ -25,27 +34,26 @@ var forward   = require('./api/forward.js').forward;
 // Set up the express app
 var app = express();
 
-// No spaces, no newlines in JSON response
+// Specify that we want no spaces, no newlines in JSON responses
 app.set('json spaces', 0);
 
 // Initialize our app core
 console.dir(core);
 core.init()
 
-
 // Static Files
 // ------------
 
+// Static files are served from these URLs (first argument)
 app.use('/flux/', express.static(core.PROJ_DIR + '/public'));
 app.use('/flux/shared', express.static(core.PROJ_DIR + '/node_modules'));
-
 
 // API Routes
 // ----------
 
 app.use('/flux/api', express.static(core.PROJ_DIR + '/api'));
 
-//Bring in all the routes here
+// Bring in all the routes here
 app.get('/flux/api/scenarios.json', scenarios);
 app.get('/flux/api/scenarios/:scenario.json', scenarios);
 app.get('/flux/api/scenarios/:scenario/grid.json', grid);
@@ -59,6 +67,8 @@ app.get('/flux/api/forward.json', forward);
 // Error Handling
 // --------------
 
+// If there's an error somewhere, instead of crashing the server, let the user
+// know with a standard RESTful response: an HTTP 500 error
 app.use(function (err, req, res, next) {
     console.error(err.stack);
     res.send(500, 'Internal Server Error');
