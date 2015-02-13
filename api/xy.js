@@ -85,7 +85,10 @@ function xy (req, res) {
             } else {
                 body = {
                     'timestamp': argument.toISOString(),
-                    'features': []
+                    'features': [],
+                    'properties': {
+                        'source' : req.params.scenario
+                    }
                 };
 
                 map[0].values.forEach(function (v, i) {
@@ -324,7 +327,8 @@ function xy (req, res) {
                         return {
                             'type': 'Feature',
                             'properties': _.extend({
-                                'timestamp': feature.timestamp
+                                'timestamp': feature.timestamp,
+                                'source' : req.params.scenario
                             }, feature.properties),
                             'geometry': {
                                 'type': 'Point',
@@ -336,7 +340,10 @@ function xy (req, res) {
 
              } else {
                 return res.send({
-                    'features': features
+                    'features': features,
+                    'properties': {
+                        'source': req.params.scenario
+                    }
                 });
 
             }

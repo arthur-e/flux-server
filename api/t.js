@@ -188,7 +188,7 @@ function t (req, res) {
             } else {
                 // Default to the temporal resolution of the data (no temporal
                 //  aggregation)
-                projection = {a
+                projection = {
                     '_id': '$_id',
                     'values': '$values'
                 };

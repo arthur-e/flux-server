@@ -12,7 +12,7 @@ function forward (req, res) {
             if (newres.statusCode == 200) {
                 return res.send(body);
             } else {
-                return res.send(400, 'Bad Request');
+                return res.send(newres.statusCode, 'Bad Request');
             }
         } else {
             return res.send(400, 'Error trying to retrieve URL');
