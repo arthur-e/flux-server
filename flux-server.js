@@ -17,6 +17,8 @@ var stats     = require('./api/stats.js').stats;
 var scenarios = require('./api/scenario.js').scenario;
 var grid      = require('./api/grid.js').grid;
 var roi       = require('./api/roi.js').roi;
+var forward   = require('./api/forward.js').forward;
+//var forward   = require('./forward.js');
 
 // Express
 // -------
@@ -52,6 +54,7 @@ app.get('/flux/api/scenarios/:scenario/uncertainty.json', uncert);
 app.get('/flux/api/scenarios/:scenario/xy.json', xy);
 app.get('/flux/api/scenarios/:scenario/t.json', t);
 app.get('/flux/api/scenarios/:scenario/roi.json', roi);
+app.get('/flux/api/forward.json', forward);
 
 
 // Error Handling
@@ -61,6 +64,8 @@ app.use(function (err, req, res, next) {
     console.error(err.stack);
     res.send(500, 'Internal Server Error');
 });
+
+//app.use(forward(/\/url\/(.*)/, TARGET_URL));
 
 // Launch
 // ------

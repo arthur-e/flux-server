@@ -237,13 +237,19 @@ var core = {
 
     polyCoords: function (wktPolyString) {
         var c = wktPolyString.replace('POLYGON((', '').replace('))', '').split(',');
-
-        return [c.map(function (v) {
-            return v.split('+').map(Number);
-
-        })];
-
-    },
+        
+        return [c.reduce(function(accum, current) {
+                    // This .reduce removes adjacent duplicates; they will cause DB errors
+                    if (accum[accum.length-1] != current) {
+                        accum.push(current);
+                    }
+                    return accum;
+                }, [])
+                .map(function (v) {
+                    // This map splits the coordinates into arrays
+                    return v.split('+').map(Number);
+                })];
+},
 
     //  Runs polygon geometry query and posts HTTP response as JSON object
     //
