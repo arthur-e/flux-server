@@ -18,7 +18,6 @@ var scenarios = require('./api/scenario.js').scenario;
 var grid      = require('./api/grid.js').grid;
 var roi       = require('./api/roi.js').roi;
 var forward   = require('./api/forward.js').forward;
-//var forward   = require('./forward.js');
 
 // Express
 // -------
@@ -64,8 +63,6 @@ app.use(function (err, req, res, next) {
     console.error(err.stack);
     res.send(500, 'Internal Server Error');
 });
-
-//app.use(forward(/\/url\/(.*)/, TARGET_URL));
 
 // Launch
 // ------
