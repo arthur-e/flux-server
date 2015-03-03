@@ -13,7 +13,8 @@
     "numeric": "1.2.6",
     "express": "3.x",
     "mongodb": "latest",
-    "queue": "git://github.com/mbostock/queue"
+    "queue": "http://github.com/mbostock/queue/tarball/master",
+    "request": "latest"
   },
   "devDependencies": {
     "jasmine-node": "latest",
@@ -24,7 +25,6 @@
     "url": "git@github.com:arthur-e/flux-server.git"
   },
   "scripts": {
-    "preinstall": "sudo npm install forever -g;sudo npm install docco -g",
     "postinstall": "./node_modules/uglify-js/bin/uglifyjs ./node_modules/moment/moment.js -o ./node_modules/moment/moment.min.js;./node_modules/uglify-js/bin/uglifyjs ./node_modules/topojson/topojson.js -o ./node_modules/topojson/topojson.min.js"
   }
 }
