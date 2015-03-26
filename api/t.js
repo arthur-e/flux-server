@@ -60,10 +60,10 @@ function t (req, res) {
             return res.send(400, 'Bad Request');
         }
 
-        // If `geom` parameter present... This hasn't been implemented yet!
+        // If `geom` parameter present... 
         if (_.has(req.query, 'geom')) {
-
-            return res.send(501, 'Not Implemented'); //TODO
+            // To get timeseries of ROI stats, use the roi.js api
+            return res.send(501, 'Use roi.js API for geom timeseries requests');
 
         // Get aggregate time series at specific coordinates
         // -------------------------------------------------
@@ -76,7 +76,7 @@ function t (req, res) {
             }
 
             // `interval` parameter constraints
-            if (!_.contains(['daily', 'monthly', 'annual'], req.query.interval)) {
+            if (!_.contains(['daily', 'weekly', 'monthly', 'annual'], req.query.interval)) {
                 return res.send(400, 'Bad Request');
             }
 
@@ -171,7 +171,7 @@ function t (req, res) {
 
             if (_.has(req.query, 'interval')) {
                 // `interval` parameter constraints
-                if (!_.contains(['daily', 'monthly', 'annual'], req.query.interval)) {
+                if (!_.contains(['daily', 'weekly', 'monthly', 'annual'], req.query.interval)) {
                     return res.send(400, 'Bad Request');
                 }
 
@@ -180,6 +180,7 @@ function t (req, res) {
                 grouping = {
                     'year': '$year',
                     'month': '$month',
+                    'week' : '$week',
                     'day': '$day',
                     'hour': '$hour',
                     'minute': '$minute'

@@ -53,6 +53,11 @@ var INTERVALS = {
         year: { '$year': '$_id' },
         values: 1
     },
+    'weekly': {
+        week: { '$week' : '$_id' },
+        year: { '$year' : '$_id' },
+        values: 1
+    },
     'monthly': {
         month: { '$month': '$_id' },
         year: { '$year': '$_id' },
@@ -190,6 +195,10 @@ var core = {
 
             case 'daily':
             unit = 'day';
+            break;
+            
+            case 'weekly':
+            unit = 'week';
             break;
 
             case 'monthly':
