@@ -5,8 +5,12 @@ D3.js Carbon Flux Visualization(s)
 # Installation #
 ################
 
-If the dependnecies (Node.js and NPM) are not already installed, skip to the next section and then come back.
-From the project root, with Node.js and NPM installed, run the following to install dependencies:
+If Node.js and NPM are not already installed, skip to the next section and then come back.
+With Node.js and NPM installed, before anything else, run `setup.sh` with root privileges to install some dependencies globally.
+
+    $ sudo . setup.sh
+
+Then, from the project root run the following to install dependencies:
 
     $ npm install
     
