@@ -130,7 +130,7 @@ function xy (req, res) {
             '$match': {
                 '_id': {
                     '$gte': new Date(req.query.start),
-                    '$lte': new Date(req.query.end)
+                    '$lt': new Date(req.query.end)
                 }
             }
         }, {
@@ -309,7 +309,7 @@ function xy (req, res) {
         collection.find({
             'timestamp': {
                 '$gte': new Date(req.query.start),
-                '$lte': new Date(req.query.end)
+                '$lt': new Date(req.query.end)
             }
         }, {'_id': 0}).toArray(function (err, features) {
             var body;

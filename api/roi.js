@@ -6,18 +6,16 @@ var _ = require('underscore');
 
 // The following `GET` parameters are supported; all are o:
 
-// * `aggregate` (Optional); used with: `interval`, `start`, `end`, `geom`
-// * `end`; used with: `aggregate`, `interval`, `start`, `geom`
-// * `geom`; used with: `aggregate`, `start`, `end`
-// * `interval` (Optional); used with: `aggregate`, `start`, `end`
-// * `start`; used with: `aggregate`, `interval`, `end`, `geom`
+// * `end`; used with: `interval`, `start`, `geom`
+// * `geom`; used with: `start`, `end`
+// * `interval` (Optional); used with: `start`, `end`
+// * `start`; used with: 'interval`, `end`, `geom`
 
 // The following are valid combinations of `GET` parameters; no combinations
 // not listed here are valid:
 //
 //      (geom, start, end)
-//      (geom, start, end, aggregate)
-//      (geom, start, end, aggregate, interval),
+//      (geom, start, end, interval),
 
 var roi = function (req, res) {
     var body, coords, grouping, i, idx, projection;

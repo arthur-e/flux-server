@@ -204,6 +204,14 @@ var core = {
             case 'monthly':
             unit = 'month';
             break;
+            
+            case 'quarterly':
+            unit = 'quarter';
+            break;
+            
+            case 'yearly':
+            unit = 'year';
+            break;
         }
         
         return unit;
@@ -394,12 +402,19 @@ var core = {
                     });
                 }
                 
-                // Aggregate by time
+                // Aggregate by time via 'interval' parameter
+                var times = [];
+                var sortByDateTimeAsc = function (l, r)  {
+                    var lhs = moment.utc(new Date(l));
+                    var rhs = moment.utc(new Date(r));
+                    return lhs > rhs ? 1 : lhs < rhs ? -1 : 0;
+                }
+                
                 if (_.has(req.query, 'interval')) {
                     ds = {};
                     items.forEach(function (item) {
-                        t = moment.utc(item._id).format('YYYYMMDD');
-                        
+                        t = moment.utc(item._id).startOf(core.getIntervalUnit(req.query.interval));
+                        //console.log(t.format('YYYYMMDD'), item._id, item.values);
                         if (!_.has(ds, t)) {
                             ds[t] =  {'sums': item.values,
                                       'n': 1}
@@ -409,19 +424,24 @@ var core = {
                         } 
                     });
 
-                    items = Object.keys(ds).sort().map(function (k) {
+                    items = Object.keys(ds).sort(sortByDateTimeAsc).map(function (k) {
                         return ds[k].sums.map(function (s) {
                             return s / ds[k].n;                        
-                        });
+                        });                    
                     });
+                    times = Object.keys(ds).sort(sortByDateTimeAsc);
+                    
                 } else {
-                    items = items.map( function (item) {
+                    items = items.map(function (item) {
                         return item.values;
+                    });
+                    times = items.map(function (item) {
+                        return item._id;
                     });
                     
                 }
                 
-                // And aggregate by `geom`
+                // And spatially aggregate by `geom`
                 var mean = [],
                     max = [],
                     min = [],
@@ -449,6 +469,7 @@ var core = {
                     seriesMax: max,
                     seriesSTD: std,
                     seriesN: n,
+                    seriesT: times,
                     properties: {
                         start: req.query.start,
                         end: req.query.end,
