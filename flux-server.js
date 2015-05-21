@@ -1,13 +1,13 @@
-// The Carbon Web API Server
-// =========================
+// The Carbon Data Explorer Web API Server ("flux-server")
+// =======================================
 
-// **Documentation last updated: January 16, 2015**
+// **Documentation last updated: May 21, 2015**
 
-// The Carbon Web API Server ("flux-server") is the software layer that handles
-// client requests for data, queries the MongoDB database, and returns data in
-// the appropriate format. It is intended to run on a local network or over the
-// internet (i.e., on a remote server) to handle requests issued from the
-// Carbon Web API Client (the Carbon Data Explorer or "flux-client").
+// The Carbon Data Explorer Web API Server ("flux-server") is the software layer
+// that handles client requests for data, queries the MongoDB database, and
+// returns data in the appropriate format. It is intended to run on a local
+// network or over the internet (i.e., on a remote server) to handle requests
+// issued from the Carbon Data Explorer Web API Client ("flux-client").
 
 // Load dependencies
 var _       = require('underscore');
@@ -19,13 +19,10 @@ var core    = require('./core').core;
 
 // Route requires
 // --------------
-var uncert    = require('./api/uncertainty.js').uncert;
 var xy        = require('./api/xy.js').xy;
 var t         = require('./api/t.js').t;
-var stats     = require('./api/stats.js').stats;
 var scenarios = require('./api/scenario.js').scenario;
 var grid      = require('./api/grid.js').grid;
-var roi       = require('./api/roi.js').roi;
 var forward   = require('./api/forward.js').forward;
 
 // Express
@@ -57,10 +54,8 @@ app.use('/flux/api', express.static(core.PROJ_DIR + '/api'));
 app.get('/flux/api/scenarios.json', scenarios);
 app.get('/flux/api/scenarios/:scenario.json', scenarios);
 app.get('/flux/api/scenarios/:scenario/grid.json', grid);
-app.get('/flux/api/scenarios/:scenario/uncertainty.json', uncert);
 app.get('/flux/api/scenarios/:scenario/xy.json', xy);
 app.get('/flux/api/scenarios/:scenario/t.json', t);
-app.get('/flux/api/scenarios/:scenario/roi.json', roi);
 app.get('/flux/api/forward.json', forward);
 
 

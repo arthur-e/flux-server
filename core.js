@@ -11,7 +11,7 @@ var _ = require('underscore');
 
 // Global variables
 // ----------------
-var PROJ_DIR = '/usr/local/project/flux-server';
+var PROJ_DIR = '/usr/local/project/CarbonDataExplorer/flux-server';
 
 // Floating-point precision for measurement values
 var PRECISION = 2;
