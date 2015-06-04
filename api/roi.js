@@ -6,10 +6,10 @@ var _ = require('underscore');
 
 // The following `GET` parameters are supported; all are o:
 
-// * `end`; used with: `interval`, `start`, `geom`
-// * `geom`; used with: `start`, `end`
+// * `end` **(Required)**; used with: `interval`, `start`, `geom`
+// * `geom` **(Required)**; used with: `start`, `end`
 // * `interval` (Optional); used with: `start`, `end`
-// * `start`; used with: 'interval`, `end`, `geom`
+// * `start` **(Required)**; used with: 'interval`, `end`, `geom`
 
 // The following are valid combinations of `GET` parameters; no combinations
 // not listed here are valid:

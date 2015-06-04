@@ -308,7 +308,6 @@ var core = {
         // Get coordinate array from WKT Polygon specification
         coords = core.polyCoords(req.query.geom);
             
-        
         // Get array of cells that intersect w/ the provided geometry
         geom_coll.find({
             'll' : {
@@ -414,7 +413,6 @@ var core = {
                     ds = {};
                     items.forEach(function (item) {
                         t = moment.utc(item._id).startOf(core.getIntervalUnit(req.query.interval));
-                        //console.log(t.format('YYYYMMDD'), item._id, item.values);
                         if (!_.has(ds, t)) {
                             ds[t] =  {'sums': item.values,
                                       'n': 1}
@@ -426,7 +424,7 @@ var core = {
 
                     items = Object.keys(ds).sort(sortByDateTimeAsc).map(function (k) {
                         return ds[k].sums.map(function (s) {
-                            return s / ds[k].n;                        
+                            return s / ds[k].n;  // aggregate is implemented here                      
                         });                    
                     });
                     times = Object.keys(ds).sort(sortByDateTimeAsc);
@@ -474,6 +472,7 @@ var core = {
                         start: req.query.start,
                         end: req.query.end,
                         geom: coords,
+                        interval: req.query.interval,
                         allMean: Number(core.getAverage(allVals).toFixed(core.PRECISION)),
                         allMax: Number(Math.max.apply(null, allVals).toFixed(core.PRECISION)),
                         allMin: Number(Math.min.apply(null, allVals).toFixed(core.PRECISION)),
