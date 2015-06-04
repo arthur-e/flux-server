@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/flux/media/font/Cabin.css" />
     <link rel="stylesheet" href="/flux/media/css/grid.css" />
     <link rel="stylesheet" href="/flux/media/css/index.css" />
-    <title>Carbon Flux Visualizations | spatial.mtri.org/flux</title>
+    <title>The Carbon Data Explorer and Other Visualizations | spatial.mtri.org/flux</title>
 </head>
 <script>
 window.DEBUG = (window.location.host === 'localhost' || window.location.href.indexOf('localhost') > 0);
@@ -24,7 +24,7 @@ if (DEBUG) {
     </div>
 
     <section class="col sidebar">
-        <header>Carbon Flux Visualizations</header>
+        <header>Carbon Data Visualizations</header>
         <article>
             <div class="graph">
                 <b>K. Arthur Endsley<a href="#f1"><sup>1</sup></a></b>
@@ -40,6 +40,10 @@ if (DEBUG) {
             </div>
         </article>
         <article>
+            <div class="title">Welcome!</div>
+            We've just released <a href="/flux-client/">the Carbon Data Explorer</a> to the public under the MIT license.
+            Check out the Carbon Data Explorer's <a href="https://github.com/arthur-e/flux-python-api" target="_blank">Python API</a>, the back-end <a href="https://github.com/arthur-e/flux-server" target="_blank">server API</a>, and the <a href="https://github.com/arthur-e/flux-client" target="_blank">web client application</a>.
+            Also, check out <a href="https://vimeo.com/129796671" target="_blank">our demo video</a> to learn how to use the software.
             <div class="title">Background</div>
             The need to quantify, monitor and understand natural and anthropogenic fluxes of carbon dioxide (CO<sub>2</sub>) has grown over the past decade.
             Observations from satellite systems are increasingly playing an important role in monitoring atmospheric CO<sub>2</sub>, providing data at spatial and temporal resolutions, and with spatial coverage, that are not possible using only a ground-based network (e.g. flux towers).
@@ -63,23 +67,32 @@ if (DEBUG) {
 
     <section class="col content">
         <div class="row">
-           <article>
+          <article>
+              <a href="https://vimeo.com/129796671" target="_blank">
+                  <div class="view">
+                      <img class="screencap" src="/flux/media/img/vis_demo_vimeo.png" />
+                  </div>
+              </a>
+              <div class="title">Carbon Data Explorer: Demo Video</div>
+              Learn how the Carbon Data Explorer works!
+          </article>
+          <article>
+                <a href="/flux-client/">
+                    <div class="view">
+                        <img class="screencap" src="/flux/media/img/vis_screen_flux_map.png" />
+                    </div>
+                </a>
+                <div class="title">The Carbon Data Explorer</div>
+                Data: CASA-GFED, Carnegie Institution for Science
+                <br /><a href="https://github.com/arthur-e/flux-client" target="_blank">Fork the project on GitHub!</a>
+            </article>
+            <article>
                 <a href="/flux/us-states-breathing.html">
                     <div class="view">
                         <img class="screencap" src="/flux/media/img/vis_screen_flux_by_states.png" />
                     </div>
                 </a>
                 <div class="title">Carbon Fluxes Aggregated by U.S. State</div>
-                December, 2003 - December 2004
-                <br />Data: CASA-GFED
-            </article>
-           <article>
-                <a href="/flux-client/">
-                    <div class="view">
-                        <img class="screencap" src="/flux/media/img/vis_screen_flux_map.png" />
-                    </div>
-                </a>
-                <div class="title">Map of Surface Carbon Fluxes</div>
                 December, 2003 - December 2004
                 <br />Data: CASA-GFED
             </article>

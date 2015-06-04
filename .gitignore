@@ -1,6 +1,0 @@
-syntax: glob
-*~
-node_modules/*
-public/media/*.json
-public/media/*.kmz
-

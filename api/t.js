@@ -60,10 +60,9 @@ function t (req, res) {
             return res.send(400, 'Bad Request');
         }
 
-        // If `geom` parameter present... 
+        // If `geom` and 'aggregate' parameters cannot be used together. 
         if (_.has(req.query, 'geom')) {
-            // To get timeseries of ROI stats, use the roi.js api
-            return res.send(501, 'Use roi.js API for geom timeseries requests');
+            return res.send(501, 'Bad request');
 
         // Get aggregate time series at specific coordinates
         // -------------------------------------------------
@@ -358,9 +357,6 @@ function t (req, res) {
 	
     // Get a raw time series for multiple grid cells
     // ---------------------------------------------
-
-    // This isn't supported yet.
-
     } else if (_.has(req.query, 'geom')) {
         core.checkGeometryCollection(req, res, core.runGeomQuery);
 
