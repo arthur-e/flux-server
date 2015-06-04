@@ -1,7 +1,7 @@
 The Carbon Data Explorer Web API Server ("flux-server")
 =======================================================
 
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 Installation
 ---------------------------------
@@ -17,7 +17,7 @@ With Node.js and NPM installed, before anything else, run `setup.sh` with root p
 Then, from the project root run the following to install dependencies:
 
     $ npm install
-    
+
 For more information on dependencies, read `package.json`.
 
 
@@ -57,7 +57,7 @@ Issue the following command to install the latest stable version of MongoDB:
     $ sudo apt-get install mongodb-10gen
 
 
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 Code Documentation
 ---------------------------------
@@ -69,16 +69,23 @@ Code documentation can be generated with [docco](http://jashkenas.github.io/docc
 To generate the documentation:
 
     $ docco -l classic ./*.js ./api/*.js
-    
+
 To access the generated documentation, point your browser to this directory location:
 
     file:///usr/local/project/CarbonDataExplorer/flux-server/docs/
 
 
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 Deployment
 ---------------------------------
+
+The server is expected to be run on a Unix-like system (GNU Linux or Mac OS X) from the directory specified by `PROJ_DIR` in `core.js`; the default is:
+
+    var PROJ_DIR = '/usr/local/project/CarbonDataExplorer/flux-server';
+
+If you want to use this default, simply clone the `flux-server` repo to this location.
+If not, clone it or move it somewhere else and change `PROJ_DIR` accordingly.
 
 The server can be run with Node.js from the command line or with `forever`, which wraps Node.js and provides fault-tolerance and automatic restarts; `forever` is recommended over Node.js.
 
@@ -90,7 +97,7 @@ To stop the server:
 
     $ forever stop flux-server.js
 
-    
+
 ### Configuring a Port Proxy with Apache
 
 The Node.js server is configured to run on Port 8080.
@@ -135,7 +142,3 @@ However, the crontab entry might not work on all GNU/Linux systems (tested with 
 If the above does not work, add the following line to `/etc/rc.local` before the line `exit 0`:
 
     (cd /usr/local/project/flux-server/; /usr/bin/sudo -u {username} /usr/local/bin/forever start /usr/local/project/flux-server/flux-server.js)
-
-
-
-
