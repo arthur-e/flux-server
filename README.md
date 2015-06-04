@@ -1,5 +1,5 @@
-The Carbon Data Explorer Web API Server ("flux-server")
-=======================================================
+The Carbon Data Explorer Web API Server
+=======================================
 
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
