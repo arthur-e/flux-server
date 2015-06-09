@@ -144,45 +144,60 @@ var core = {
     // ---------------------
     
     // `checkGeometryCollection()` retrieves an existing geometry
-    // collection for the requested scenario, creates one if it does not exist,
-    // and passes the result to a callback function.
+    // collection for the requested scenario if it exists and passes the result
+    // to a local callback. Handles method differences between different
+    // versions of mongoDB (i.e. 'collectionNames' v 'getCollectionNames')
     checkGeometryCollection: function (req, res, callback) {
+        var self = this;
+        
         // Variable representing the name of the MongoDB geometry collection
         // for the specified scenario
         var n = '_geom_' + req.params.scenario; 
         
         this.DB.collectionNames(n, function(err, items) {
             if (err) {
-                res.send(404, 'MongoDB error: could not get collection names');
-            }
-            
-            // If geometry collection does not exist, create it
-            if (items.length === 0) {
-                var geom_coll = core.getGeomCollection(req.params.scenario);
-                
-                // Build geometry collection from the cooresponding
-                // `coord_index` document
-                geom_coll.insert(core.INDEX[req.params.scenario].map(function (x, i) {
-                        return {'ll': x, 'idx': i};
-                    }),
-                    {safe: true},
-                    function(err, result) {
-                        if (err) {return res.send(404, 'Error converting index to geometry row');}
-                        
-                        // Add geometry index to faciliate spatial queries
-                        geom_coll.ensureIndex({'ll':'2dsphere'}, function(err, result) {
-                            if (err) {
-                                return res.send(404, 'Failed to create index on geometry collection');
-                            }
-                            callback(req, res);
-                        });
-                    });
-            
-            // Otherwise just throw the callback
+                this.DB.getCollectionNames(n, function(err, items) {
+                    if (err) {
+                        res.send(404, 'MongoDB error: could not get collection names');
+                    } else {
+                        self.checkGeometryCollectionCallback(req, res, items, callback);
+                    }
+                });
             } else {
-                callback(req, res);
+                self.checkGeometryCollectionCallback(req, res, items, callback);
             }
-        });
+        })
+    },
+    
+    // 'checkGeometryCollectionCallback()' creates a geometry collection if it
+    // does not exist, and passes the result to a callback function.
+    checkGeometryCollectionCallback: function (req, res, items, callback) {
+        // If geometry collection does not exist, create it
+        if (items.length === 0) {
+            var geom_coll = core.getGeomCollection(req.params.scenario);
+            
+            // Build geometry collection from the cooresponding
+            // `coord_index` document
+            geom_coll.insert(core.INDEX[req.params.scenario].map(function (x, i) {
+                    return {'ll': x, 'idx': i};
+                }),
+                {safe: true},
+                function(err, result) {
+                    if (err) {return res.send(404, 'Error converting index to geometry row');}
+                    
+                    // Add geometry index to faciliate spatial queries
+                    geom_coll.ensureIndex({'ll':'2dsphere'}, function(err, result) {
+                        if (err) {
+                            return res.send(404, 'Failed to create index on geometry collection');
+                        }
+                        callback(req, res);
+                    });
+                });
+            
+        // Otherwise just throw the callback
+        } else {
+            callback(req, res);
+        }
     },
     
     // `getIntervalUnit()` translates between user-friendly API time descriptors
