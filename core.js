@@ -149,24 +149,30 @@ var core = {
     // versions of mongoDB (i.e. 'collectionNames' v 'getCollectionNames')
     checkGeometryCollection: function (req, res, callback) {
         var self = this;
-        
+
         // Variable representing the name of the MongoDB geometry collection
         // for the specified scenario
         var n = '_geom_' + req.params.scenario; 
-        
-        this.DB.collectionNames(n, function(err, items) {
-            if (err) {
-                this.DB.getCollectionNames(n, function(err, items) {
-                    if (err) {
-                        res.send(404, 'MongoDB error: could not get collection names');
-                    } else {
-                        self.checkGeometryCollectionCallback(req, res, items, callback);
-                    }
-                });
-            } else {
-                self.checkGeometryCollectionCallback(req, res, items, callback);
-            }
-        })
+
+        if (typeof this.DB.collectionNames == 'function') { // for MongoDb Node.js driver <=1.4.9
+            this.DB.collectionNames(n, function(err, items) {
+                if (err) {
+                    res.send(404, 'MongoDB error: could not get collection names');
+                } else {
+                    self.checkGeometryCollectionCallback(req, res, items, callback);
+                }
+            });
+        } else if (typeof this.DB.listCollections == 'function') { // for MongoDb Node.js drive >1.4.9
+            this.DB.listCollections({name: n}).next(function(err, items) {
+                if (err) {
+                    res.send(404, 'MongoDB error: could not get collection names');
+                } else {
+                    self.checkGeometryCollectionCallback(req, res, items, callback);
+                }
+            });
+        } else {
+            res.send(404, 'MongoDB error: required method not found');     
+        }
     },
     
     // 'checkGeometryCollectionCallback()' creates a geometry collection if it

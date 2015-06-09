@@ -12,7 +12,7 @@
     "moment": "latest",
     "numeric": "1.2.6",
     "express": "3.x",
-    "mongodb": "1.4.9",
+    "mongodb": "latest",
     "queue-async": "http://github.com/mbostock/queue/tarball/master",
     "request": "latest"
   },
