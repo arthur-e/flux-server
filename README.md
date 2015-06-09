@@ -36,7 +36,7 @@ For more information on dependencies, read `package.json`.
 
 ### Installing MongoDB
 
-If MongoDB was not already installed along with the Python API (`flux-python-api`), follow these instructions.
+The server API has been tested with MongoDB 1.4.9. If MongoDB was not already installed along with the Python API (`flux-python-api`), follow these instructions.
 
 #### On Ubuntu Linux:
 
