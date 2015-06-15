@@ -143,23 +143,23 @@ Examples
 
 ### Getting Metadata ##########################################################
 
-    GET scenarios.json
+    http://localhost/flux/api/scenarios.json
 
 ### Getting a Map (XY Data) ####################################################
 
 #### Getting a Map at a Specified Time
-
-    GET xy.json?time=2004-05-01T03:00:00
+    
+    http://localhost/flux/api/scenarios/casa_gfed_2004/xy.json?time=2004-05-01T03:00:00
 
 #### Aggregation in Time
 
 The `aggregate` keyword is used to specify the kind of aggregate data desired. Here is an example of aggregation in time; aggregating total positive flux over a specified period. The aggregation is performed "element-wise" stacking maps (as arrays) together so as to produce a value for each grid cell.
-
-    GET xy.json?start=2004-05-01T03:00:00&end=2004-06-01T03:00:00&aggregate=positive
+    
+    http://localhost/flux/api/scenarios/casa_gfed_2004/xy.json?start=2004-05-01T03:00:00&end=2004-06-01T03:00:00&aggregate=positive
 
 And here is a map of net flux over a month for each grid cell:
-
-    GET xy.json?start=2004-05-01T03:00:00&end=2004-05-02T03:00:00&aggregate=net
+    
+    http://localhost/flux/api/scenarios/casa_gfed_2004/xy.json?start=2004-05-01T03:00:00&end=2004-05-02T03:00:00&aggregate=net
 
 ### Getting a Time Series ######################################################
 
@@ -168,12 +168,12 @@ As with the XY endpoint, the `aggregate` keyword is used to specify the kind of 
 #### Filtering in Space
 
 The `t.json` endpoint requires that a single value be generated for each time step. With spatiotemporal data, this means that either spatial filtering or spatial aggregation is required. **Spatial filtering produces one value for each time step according to the selected spatial filter**. The `coords` parameter selects the single value occuring at the coordinate location.  Here's an example of how to obtain a Time Series at a specified point in a spatiotemporal collection of rasters:
-
-    GET t.json?coords=POINT(-50.5+69.5)&start=2004-05-01T03:00:00&end=2004-05-02T03:00:00
+    
+    http://localhost/flux/api/scenarios/casa_gfed_2004/t.json?coords=POINT(-50.5+69.5)&start=2004-05-01T03:00:00&end=2004-05-02T03:00:00
 
 Alternatively, the `geom` parameter can be used to select a single for each time step representing the *mean* value of all data points occurring within the provided WKT `POLYGON()`. When using the `geom` parameter, the server will return not only the `mean` value but also data arrays representing `min`, `max`, `standard deviation`, and `n` for the points within the geometry.
-
-    GET t.json?start=2004-05-01T03:00:00&end=2004-05-02T03:00:00&interval=weekly&geom=POLYGON((-97%2B46%2C-101%2B37%2C-93%2B35%2C-89%2B42%2C-97%2B46))
+    
+    http://localhost/flux/api/scenarios/casa_gfed_2004/t.json?start=2004-05-01T03:00:00&end=2004-05-02T03:00:00&interval=weekly&geom=POLYGON((-97%2B46%2C-101%2B37%2C-93%2B35%2C-89%2B42%2C-97%2B46))
 
     
 #### Aggregation in Space
@@ -191,14 +191,14 @@ Alternatively, the `geom` parameter can be used to select a single for each time
 
 
 Here is an example of the mean value displayed for every time frame in the original dataset; it is presented at the same resolution as the non-aggregated data:
-
-    GET t.json?start=2003-12-22T03:00:00&end=2005-01-01T00:00:00&aggregate=mean
+    
+    http://localhost/flux/api/scenarios/casa_gfed_2004/t.json?start=2003-12-22T03:00:00&end=2005-01-01T00:00:00&aggregate=mean
 
 Spatial filtering using the `coords` or `geom` parameter with the `aggregate` parameter is not yet supported.
     
 #### Aggregation in Both Space and Time
 
 The `interval` parameter can be used to further aggregate in time. If spatial filtering is also requested (with the `geom` parameter), then the specified aggregate is also applied over the spatial subset before being applied to each time step (e.g. the mean daily value of the means). Here is a time series of net daily flux across the entire dataset (in this case, net daily flux of North America) for each day of the month. 
-
-    GET t.json?start=2003-12-22T03:00:00&end=2005-01-01T00:00:00&aggregate=mean&interval=daily
+    
+    http://localhost/flux/api/scenarios/casa_gfed_2004/t.json?start=2003-12-22T03:00:00&end=2005-01-01T00:00:00&aggregate=mean&interval=daily
 
