@@ -36,7 +36,7 @@ For more information on dependencies, read `package.json`.
 
 ### Installing MongoDB
 
-The server API has been tested with MongoDB versions 1.4.9 and 2.4.14; it should be compatiable with all 1.x and 2.x versions of MongoDB.
+The Carbon Data Explorer has been tested with MongoDB versions 1.4.9, 2.4.14, and 3.0.2; it should be compatiable with all 1.x, 2.x, and 3.x versions of MongoDB.
 If MongoDB was not already installed along with the Python API (`flux-python-api`), follow these instructions.
 
 #### On Ubuntu Linux:
