@@ -43,7 +43,6 @@ core.init()
 
 // Static files are served from these URLs (first argument)
 app.use('/flux/', express.static(core.PROJ_DIR + '/public'));
-app.use('/flux/builds', express.static(core.PROJ_DIR + '/public/builds'));
 app.use('/flux/shared', express.static(core.PROJ_DIR + '/node_modules'));
 
 // API Routes
